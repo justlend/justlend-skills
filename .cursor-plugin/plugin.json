@@ -1,0 +1,12 @@
+{
+  "name": "justlend-skills",
+  "description": "AI Agent skills for JustLend DAO — lending, staking, energy rental, and governance on TRON.",
+  "version": "1.0.0",
+  "author": "JustLend DAO",
+  "repository": "https://github.com/justlend/justlend-skills",
+  "license": "MIT",
+  "keywords": [
+    "tron", "trx", "defi", "justlend", "lending", "staking", "governance"
+  ],
+  "skills": ["./skills/"]
+}

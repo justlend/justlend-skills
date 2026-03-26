@@ -1,0 +1,48 @@
+{
+  "name": "@justlend/justlend-skills",
+  "version": "1.0.0",
+  "description": "AI Agent skills for JustLend DAO on TRON — structured instructions and MCP tools for lending, staking, energy rental, and governance operations.",
+  "main": "scripts/mcp_server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/mcp_server.mjs",
+    "dev": "npx nodemon scripts/mcp_server.mjs",
+    "test": "node scripts/justlend_api.mjs markets"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "tron",
+    "trx",
+    "trc20",
+    "justlend",
+    "defi",
+    "lending",
+    "staking",
+    "energy",
+    "governance",
+    "ai-agent",
+    "skills"
+  ],
+  "author": "JustLend DAO",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justlend/justlend-skills.git"
+  },
+  "homepage": "https://justlend.org",
+  "bugs": {
+    "url": "https://github.com/justlend/justlend-skills/issues"
+  },
+  "dependencies": {
+    "tronweb": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "@modelcontextprotocol/sdk": "^1.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

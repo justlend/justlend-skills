@@ -1,0 +1,11 @@
+{
+  "name": "justlend-skills",
+  "description": "AI Agent skills for JustLend DAO — lending, staking, energy rental, and governance on TRON.",
+  "version": "1.0.0",
+  "skills": [
+    "./skills/"
+  ],
+  "keywords": [
+    "tron", "trx", "defi", "justlend", "lending", "staking", "governance"
+  ]
+}

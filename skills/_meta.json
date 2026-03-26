@@ -1,0 +1,38 @@
+{
+  "owner": "justlend",
+  "slug": "justlend-skills",
+  "displayName": "JustLend DAO Skills",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1741622400000,
+    "commit": ""
+  },
+  "history": [],
+  "keywords": [
+    "tron", "trx", "trc20", "defi", "justlend", "lending",
+    "staking", "energy", "governance", "mcp", "ai-agent"
+  ],
+  "description": "AI Agent skills for JustLend DAO — query market data, manage lending positions, and execute DeFi operations on the TRON blockchain.",
+  "skills": [
+    {
+      "id": "justlend-lending-v1",
+      "name": "JustLend Lending",
+      "description": "Supply, borrow, repay, and withdraw on JustLend markets"
+    },
+    {
+      "id": "justlend-trx-staking",
+      "name": "sTRX Staking",
+      "description": "Stake TRX for sTRX liquid staking tokens"
+    },
+    {
+      "id": "justlend-energy-rental",
+      "name": "Energy Rental",
+      "description": "Rent TRON Energy from JustLend marketplace"
+    },
+    {
+      "id": "justlend-governance-v1",
+      "name": "DAO Governance",
+      "description": "Participate in JustLend DAO proposal voting"
+    }
+  ]
+}

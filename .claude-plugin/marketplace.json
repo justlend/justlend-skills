@@ -1,0 +1,33 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "justlend-skills",
+  "description": "AI Agent skills for JustLend DAO protocol — interact with JustLend DAO on the TRON network, retrieve market data, check user positions, and execute DeFi operations like supply, borrow, and stake.",
+  "owner": {
+    "name": "justlend-skills"
+  },
+  "metadata": {
+    "description": "Skills covering lending operations, market data, asset supply/borrow, staking, energy resource management, and DAO governance voting on JustLend."
+  },
+  "plugins": [
+    {
+      "name": "justlend-skills",
+      "source": "./",
+      "description": "JustLend skills — get market data, monitor positions, deposit/withdraw assets, borrow/repay loans, stake sTRX, and participate in DAO governance.",
+      "version": "1.0.0",
+      "author": {
+        "name": "justlend-skills"
+      },
+      "license": "MIT",
+      "keywords": [
+        "tron", "trx", "trc20", "defi", "justlend", "lending",
+        "staking", "energy", "bandwidth", "governance", "web3", "skills"
+      ],
+      "category": "web3",
+      "tags": [
+        "skills", "tron", "justlend", "defi", "lending",
+        "staking", "energy", "governance", "blockchain"
+      ],
+      "strict": false
+    }
+  ]
+}
