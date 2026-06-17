@@ -14,7 +14,9 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 - **Account Analysis**: Health factor monitoring, liquidation risk assessment, balance queries
 - **Token Allowances**: Check TRC20 approval status for JustLend contracts
 
-> For advanced features (sTRX staking, energy rental, governance voting, mining rewards), use the full MCP server: [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)
+- **JustLend V2**: Isolated-market lending — curated ERC4626 supply vaults + permissionless `(collateral, loan)` borrow markets, with per-market `risk`/`lltv`, liquidation, and history (see the [V2 skill](skills/justlend-lending-v2/SKILL.md))
+
+> For advanced features (V2 lending, sTRX staking, energy rental, governance voting, mining rewards), use the full MCP server: [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend) (v1.1.0+ adds the 30 V2 tools and 4 AI prompts).
 
 ## Supported Markets
 
@@ -40,12 +42,14 @@ justlend-skills/
 │   └── justlend_api.mjs             # JustLend API client & CLI tool
 ├── skills/                           # Agent skill instructions
 │   ├── _meta.json                   # Skill metadata
-│   ├── justlend-lending-v1/SKILL.md # Lending operations guide
+│   ├── justlend-lending-v1/SKILL.md # V1 pooled lending operations guide
+│   ├── justlend-lending-v2/SKILL.md # V2 isolated lending guide
 │   ├── justlend-trx-staking/SKILL.md
 │   ├── justlend-energy-rental/SKILL.md
 │   └── justlend-governance-v1/SKILL.md
 ├── docs/                             # Protocol guides
 │   ├── justlend-guide.md            # Lending concepts & risk management
+│   ├── justlend-v2-guide.md         # V2 isolated-market concepts
 │   ├── strx-staking-guide.md        # sTRX staking guide
 │   └── resource-rental.md           # Energy rental guide
 ├── SKILL.md                          # Main skill reference
