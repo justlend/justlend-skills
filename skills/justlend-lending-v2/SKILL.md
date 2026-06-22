@@ -74,12 +74,20 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
 | Tool | Description | Write? |
 |------|-------------|--------|
 | `get_moolah_dashboard` | V2 protocol overview (vaults, markets, TVL) | No |
-| `get_moolah_user_summary` | All of a user's V2 vault + market positions | No |
-| `get_moolah_history` | A user's V2 lend/borrow action records | No |
+| `get_moolah_history` | A user's V2 position history (net worth/supply/borrow over time) + recent lend/borrow records | No |
 | `get_moolah_records` | Paginated V2 `/record/lend` history | No |
 | `get_moolah_vault_history` | Vault APY / TVL time series | No |
 | `get_moolah_market_history` | Market borrow/supply APY + utilization curves | No |
 | `estimate_moolah_energy` | Energy/TRX estimate for the 11 Moolah write ops | No |
+
+### Mining / rewards
+| Tool | Description | Write? |
+|------|-------------|--------|
+| `get_moolah_vault_mining_apy` | Single vault's V2 mining APY (USDD/TRX split + total) | No |
+| `get_moolah_mining_resolver` | All mining-enabled vaults → their USDD/TRX APY split | No |
+| `get_moolah_mining_accruing` | A user's accruing + settling mining rewards across vaults | No |
+| `get_moolah_pending_mining_periods` | A user's claimable (settled, merkle-published) airdrop rounds | No |
+| `claim_moolah_mining_period` | Claim a single settled mining airdrop round via `multiClaim()` | **Yes** |
 
 > AI prompts (full MCP server): `moolah_supply`, `moolah_borrow`, `moolah_liquidate`,
 > `moolah_portfolio`.
@@ -88,7 +96,7 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
 
 ### Risk is per-market, not account-wide
 Unlike V1's single health factor, V2 risk lives in each market. Always call
-`get_moolah_user_position` (or `get_moolah_user_summary` for the full picture) and inspect the
+`get_moolah_user_position` (or `get_moolah_history` for the full picture) and inspect the
 `risk` ratio (0–1) **and** the market `lltv` before advising. `risk` near 1 ⇒ liquidatable.
 
 ### Approve before write
