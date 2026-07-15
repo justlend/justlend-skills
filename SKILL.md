@@ -1,3 +1,15 @@
+---
+name: justlend-dao
+description: >-
+  Read-only query surface for JustLend DAO lending on TRON — real-time market
+  data (APY/TVL/rates), account positions and health factor, jToken details,
+  TRC20 balances, and allowances, via the bundled 9-tool MCP server. Use when
+  the user asks about JustLend markets, their lending position/health, or TRON
+  lending data. For write actions (supply/borrow/repay/withdraw, stake, vote,
+  rent energy) use the matching write skill plus the full
+  @justlend/mcp-server-justlend. Not for non-TRON chains or non-JustLend protocols.
+---
+
 # JustLend DAO — AI Agent Skill
 
 This skill enables AI agents to interact with the [JustLend DAO](https://justlend.org) lending protocol on the TRON blockchain. Query real-time market data, check account positions, and analyze lending data via MCP tools.

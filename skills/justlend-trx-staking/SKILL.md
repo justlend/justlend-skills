@@ -1,3 +1,13 @@
+---
+name: justlend-trx-staking
+description: >-
+  Liquid-stake TRX on JustLend to receive sTRX (earns staking rewards, stays
+  usable in DeFi), and unstake / claim / withdraw. Use when the user wants to
+  stake or unstake TRX, or asks about sTRX. Unstaking has an unbonding period.
+  Writes require the full MCP server plus a signing wallet. Not for plain TRX
+  transfers.
+---
+
 # JustLend sTRX Staking
 
 Liquid staking skill for TRX on JustLend. Stake TRX to receive sTRX tokens, which earn staking rewards automatically while remaining usable in DeFi protocols.
