@@ -3,6 +3,18 @@
 All notable changes to `justlend-skills`. Format based on Keep a Changelog.
 `SPDX-License-Identifier: MIT`. Exact publish timestamps: see `skills/_meta.json`.
 
+## [Unreleased]
+
+### Added (docs / agent-readiness)
+- **Agent Workflows** — closed-loop examples: read+advise routing, V1/V2 disambiguation, a HITL write path, and error/boundary handling.
+- **Skill Inputs, Outputs & Failure Handling** table — per-skill read/write tools, return shape, and the no-auto-retry contract for writes.
+- **Per-skill risk profile** and **agent-misfire recovery** guidance under Safety & Boundaries.
+- **Troubleshooting** expanded to a symptom → cause → fix table (discovery, credentials, rate limit, network mismatch, version drift).
+- Install flow gained **Verify / Upgrade / Uninstall** steps; Client Configuration gained **load-verification** and **conflict handling**; Overview gained an explicit **When *not* to use** list; the dependency matrix gained a **graceful-degradation** note.
+
+### Migration
+- Documentation only — no code, tool, or API changes. No action required; re-pull for the updated README.
+
 ## [1.1.0]
 
 ### Added
