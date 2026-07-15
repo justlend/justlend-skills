@@ -1,3 +1,13 @@
+---
+name: justlend-governance-v1
+description: >-
+  Participate in JustLend DAO governance on TRON: view proposals, deposit JST
+  for voting power (WJST), cast votes, and reclaim votes after a proposal ends.
+  Use when the user wants to view or vote on JustLend proposals. Writes require
+  the full MCP server plus a signing wallet; depositing JST locks it as WJST
+  until withdrawal.
+---
+
 # JustLend DAO Governance
 
 Governance skill for participating in JustLend DAO proposals. View proposals, deposit JST for voting power, cast votes, and reclaim votes after proposals end.

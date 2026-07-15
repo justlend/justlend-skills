@@ -1,3 +1,14 @@
+---
+name: justlend-lending-v1
+description: >-
+  Supply, borrow, repay, and withdraw on JustLend V1 pooled (Compound-style)
+  jToken markets on TRON, plus enable/disable collateral and TRC20 approvals.
+  Use when the user wants to lend, borrow, repay, or withdraw on JustLend V1.
+  Writes require the full @justlend/mcp-server-justlend and a signing wallet.
+  Not for V2 isolated markets (use justlend-lending-v2) or read-only queries
+  (use the base justlend-dao skill).
+---
+
 # JustLend Lending Data Query
 
 Core query skill for JustLend DAO on TRON. Enables AI agents to query market data, check account positions, and analyze lending information.

@@ -1,3 +1,13 @@
+---
+name: justlend-lending-v2
+description: >-
+  Isolated-market lending on JustLend V2 (Moolah, a Morpho-style protocol) on
+  TRON: supply into ERC4626 vaults, supply-collateral / borrow / repay in
+  isolated markets, and liquidate. Use when the user references JustLend V2,
+  Moolah, isolated markets, or vaults. Writes require the full MCP server plus a
+  signing wallet. Not for V1 pooled markets (use justlend-lending-v1).
+---
+
 # JustLend V2 Lending
 
 Isolated-market lending skill for **JustLend V2** on TRON — a Morpho-style protocol that

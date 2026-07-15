@@ -1,3 +1,13 @@
+---
+name: justlend-energy-rental
+description: >-
+  Rent TRON Energy from the JustLend marketplace (cheaper than burning TRX for
+  contract calls): check rental price, rent, and return energy. Use when the
+  user wants to rent or return TRON energy, or lower transaction resource cost.
+  Writes require the full MCP server plus a signing wallet. Not for bandwidth or
+  staking-TRX-for-energy (that is TRX staking / freezing).
+---
+
 # JustLend Energy Rental
 
 Energy rental skill for the JustLend marketplace. Rent TRON Energy at lower cost than burning TRX, enabling more efficient smart contract interactions.
