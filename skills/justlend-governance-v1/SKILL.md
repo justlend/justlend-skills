@@ -5,7 +5,7 @@ description: >-
   for voting power (WJST), cast votes, and reclaim votes after a proposal ends.
   Use when the user wants to view or vote on JustLend proposals. Writes require
   the full MCP server plus a signing wallet; depositing JST locks it as WJST
-  until withdrawal.
+  until withdrawal. Not for plain token transfers or non-JustLend DAOs.
 ---
 
 # JustLend DAO Governance

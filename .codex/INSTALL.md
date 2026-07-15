@@ -35,6 +35,7 @@ ls ~/.agents/skills/justlend-skills
 | Skill | Description |
 |-------|-------------|
 | `justlend-lending-v1` | Supply, withdraw, borrow, repay assets on JustLend |
+| `justlend-lending-v2` | Isolated-market lending (Moolah): ERC4626 vaults, borrow, liquidate (requires full MCP server) |
 | `justlend-trx-staking` | sTRX liquid staking (requires full MCP server) |
 | `justlend-energy-rental` | Energy rental from JustLend marketplace (requires full MCP server) |
 | `justlend-governance-v1` | DAO governance voting (requires full MCP server) |

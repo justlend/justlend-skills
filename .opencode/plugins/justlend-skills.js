@@ -18,6 +18,7 @@ const PROJECT_ROOT = path.resolve(__dirname, "../..");
 
 const SKILL_NAMES = [
   "justlend-lending-v1",
+  "justlend-lending-v2",
   "justlend-trx-staking",
   "justlend-energy-rental",
   "justlend-governance-v1"
