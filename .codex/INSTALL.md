@@ -7,6 +7,8 @@
 
 ## Installation
 
+JustLend Skills is distributed from GitHub and is not published to the npm registry. Clone the repository rather than running `npm install @justlend/justlend-skills`; the install script's `npm install` step only installs dependencies inside the clone.
+
 1. **Clone the repository:**
 
    ```bash

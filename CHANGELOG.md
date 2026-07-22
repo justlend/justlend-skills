@@ -13,6 +13,7 @@ All notable changes to `justlend-skills`. Format based on Keep a Changelog.
 - Install flow gained **Verify / Upgrade / Uninstall** steps; Client Configuration gained **load-verification** and **conflict handling**; Overview gained an explicit **When *not* to use** list; the dependency matrix gained a **graceful-degradation** note.
 
 ### Fixed (docs accuracy)
+- Installation guidance now identifies GitHub as the distribution source and explicitly notes that `@justlend/justlend-skills` is not published to npm; the package is marked private to prevent accidental publication.
 - Error-shape claims corrected to match the implementations: the **bundled** server returns a plain-text `Error: <message>` + `isError` (no structured fields); the structured `{ error, errorCode, retryable, hint }` envelope belongs to the **full** server only.
 - USDT/USDC/USDJ approve wording: the reset-to-0 is **defensive** (front-end parity; on-chain probing shows current TRON deployments don't enforce the guard), not a protocol requirement.
 
