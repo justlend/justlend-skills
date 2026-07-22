@@ -7,6 +7,8 @@
 
 AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Provides structured instructions and an MCP server that enables AI agents (Claude Code, Claude Desktop, Cursor, Codex, etc.) to query market data, check account positions, and analyze DeFi lending data.
 
+> **Distribution:** install this project from [GitHub](https://github.com/justlend/justlend-skills); it is not published to the npm registry. The scoped name in `package.json` identifies the project for local tooling only. Do not run `npm install @justlend/justlend-skills`—clone the repository and run `bash install.sh` as described below. The `npm install` command used inside the clone installs this project's dependencies.
+
 ## Features
 
 - **Market Data**: Real-time APY (including mining rewards), TVL, and utilization for all JustLend markets
@@ -18,10 +20,10 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 
 > For advanced features (V2 lending, sTRX staking, energy rental, governance voting, mining rewards), use the full MCP server: [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend) (adds the V2 tools, WTRX wrap/unwrap, and AI prompts).
 
-**When to use this package:** an agent needs to *read* JustLend — market rates, a wallet's position and health, balances, or allowances — with only a TronGrid key and **no signing wallet**.
+**When to use this project:** an agent needs to *read* JustLend — market rates, a wallet's position and health, balances, or allowances — with only a TronGrid key and **no signing wallet**.
 
 **When *not* to use it:**
-- You need to **move funds** — supply/borrow/repay/withdraw, stake, vote, rent energy, wrap/unwrap. That is the [full MCP server](https://github.com/justlend/mcp-server-justlend) plus a signing wallet, not this package.
+- You need to **move funds** — supply/borrow/repay/withdraw, stake, vote, rent energy, wrap/unwrap. That is the [full MCP server](https://github.com/justlend/mcp-server-justlend) plus a signing wallet, not this project.
 - You're on a **non-TRON chain** or a **different protocol** — these skills are JustLend/TRON-only and will not route.
 - You want raw node access with **no JustLend context** — call TronGrid directly instead.
 
@@ -29,7 +31,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 
 | Mode | What it is | Use when | Writes? |
 |------|-----------|----------|:------:|
-| **Skills (this package)** | Agent instruction files (`SKILL.md`) + a bundled read-only MCP server (9 tools) | An agent needs to *query* JustLend — markets, your position/health, balances, allowances | No |
+| **Skills (this repository)** | Agent instruction files (`SKILL.md`) + a bundled read-only MCP server (9 tools) | An agent needs to *query* JustLend — markets, your position/health, balances, allowances | No |
 | **Bundled MCP server** (`npm start`) | The 9-tool read-only stdio server shipped here | Same, wired into a client (Claude / Cursor / Codex / OpenCode) | No |
 | **CLI** (`node scripts/justlend_api.mjs`) | One-shot terminal queries | Quick manual checks / scripting reads | No |
 | **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | 98-tool read + **write** server | You need to *act*: supply/borrow/repay/withdraw, stake, rent energy, vote, liquidate | **Yes** (signing wallet required) |
@@ -45,7 +47,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 | `justlend-energy-rental` | — | ✅ | ✅ | ✅ | Yes |
 | `justlend-governance-v1` | — | ✅ | ✅ | ✅ | Yes |
 
-Read-only skills work with just this package + a TronGrid key. Every write skill routes through the full server and needs a **signing wallet** (agent-wallet or a browser wallet); the bundled server has no signing capability.
+Read-only skills work with just this repository + a TronGrid key. Every write skill routes through the full server and needs a **signing wallet** (agent-wallet or a browser wallet); the bundled server has no signing capability.
 
 **Graceful degradation.** If the full MCP server or a signing wallet is absent, the read-only skills still work unchanged — the agent can quote rates, read a position, and check allowances, then tell the user exactly what to install (the full server) and connect (a wallet) to act. A write skill invoked without the full server should **stop and report the missing dependency**, never silently no-op or fake a result.
 
@@ -90,7 +92,7 @@ justlend-skills/
 
 ## Quick Start
 
-### 1. Install
+### 1. Install from GitHub
 
 ```bash
 git clone https://github.com/justlend/justlend-skills.git
@@ -98,7 +100,7 @@ cd justlend-skills
 bash install.sh
 ```
 
-Or manually:
+Or, after cloning the repository, install its dependencies manually:
 
 ```bash
 npm install
@@ -279,7 +281,7 @@ Real closed loops — user utterance → skill/tool routing → output → next 
 3. `get_account_summary` → current health factor and borrow limit.
 4. **Output:** "USDT borrow APY is X% (Y% after mining). Your health factor is 2.1; borrowing $500 drops it to ~1.6 — still safe. To actually borrow you'll need the full server plus a wallet."
 
-No funds move — the agent stops at advice because this package is read-only.
+No funds move — the agent stops at advice because this project is read-only.
 
 ### V1 vs V2 disambiguation
 
@@ -306,8 +308,8 @@ No funds move — the agent stops at advice because this package is read-only.
 
 ## Safety & Boundaries
 
-- **This package is read-only.** The bundled MCP server (`scripts/mcp_server.mjs`) and the CLI only *query* — no transaction signing, no writes, no fund movement. It cannot move or lose funds.
-- **Credentials.** The only secret is a **TronGrid API key** (read-only RPC access), stored locally in `.env` (git-ignored). No signing key is used or stored by this package.
+- **This project is read-only.** The bundled MCP server (`scripts/mcp_server.mjs`) and the CLI only *query* — no transaction signing, no writes, no fund movement. It cannot move or lose funds.
+- **Credentials.** The only secret is a **TronGrid API key** (read-only RPC access), stored locally in `.env` (git-ignored). No signing key is used or stored by this project.
 - **Write operations live in the full server.** supply/borrow/repay/withdraw, sTRX staking, energy rental, and governance voting run through [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend), which requires a **signing wallet**. When you enable those, the host MUST:
   - **confirm every write with the user (HITL)** before signing — show amount, market, and direction;
   - **never auto-retry a mutating call** (a repay / borrow / liquidate / vote may already have landed) — re-query state first;
@@ -335,7 +337,7 @@ No funds move — the agent stops at advice because this package is read-only.
 ## Data & Privacy
 
 - **What's read:** on-chain market/account data plus the JustLend read APIs. A queried **address is sent to TronGrid and the JustLend `/account` API** to fetch its balances / positions.
-- **What's stored:** nothing is persisted or logged by this package beyond your local `.env` key; no user data leaves your machine except the read requests above.
+- **What's stored:** nothing is persisted or logged by this project beyond your local `.env` key; no user data leaves your machine except the read requests above.
 
 ## Troubleshooting
 
@@ -350,7 +352,7 @@ No funds move — the agent stops at advice because this package is read-only.
 | MCP server won't start | Node < 20, or deps not installed | `node -v` (need v20+); run `npm install` |
 | Behaviour changed after update | version / manifest drift | compare installed version with [`CHANGELOG.md`](CHANGELOG.md); re-run `npm install` and restart |
 
-**Logs & version.** The CLI and server print errors to stderr — run the CLI command directly to see the raw error and the offending address/token. Include the package version from `package.json` / `skills/_meta.json` when filing an issue.
+**Logs & version.** The CLI and server print errors to stderr — run the CLI command directly to see the raw error and the offending address/token. Include the project version from `package.json` / `skills/_meta.json` when filing an issue.
 
 ## License
 
