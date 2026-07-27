@@ -6,7 +6,7 @@ description: >-
   TRC20 balances, and allowances, via the bundled 9-tool MCP server. Use when
   the user asks about JustLend markets, their lending position/health, or TRON
   lending data. For write actions (supply/borrow/repay/withdraw, stake, vote,
-  rent energy) use the matching write skill plus the full
+  rent or directly buy energy) use the matching write skill plus the full
   @justlend/mcp-server-justlend. Not for non-TRON chains or non-JustLend protocols.
 ---
 
@@ -75,8 +75,10 @@ Always call `get_account_summary` before advising a user about their position. I
 - "Show me detailed info for the jUSDT market including the interest rate model."
 - "How much TRX do I have in my wallet?"
 - "List all supported JustLend markets and their addresses."
+- "Quote a direct energy purchase for these receiver addresses."
 
 ## Security
 
 - This is a **read-only** skill — no transaction signing or write operations
 - Only requires a TronGrid API key for blockchain read access
+- Direct energy purchase uses `justlend-energy-purchase` with the full MCP server; it is not provided by this bundled read-only MCP.

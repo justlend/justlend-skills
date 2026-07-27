@@ -21,6 +21,7 @@ const SKILL_NAMES = [
   "justlend-lending-v2",
   "justlend-trx-staking",
   "justlend-energy-rental",
+  "justlend-energy-purchase",
   "justlend-governance-v1"
 ];
 

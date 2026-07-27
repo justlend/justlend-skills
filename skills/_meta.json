@@ -38,6 +38,11 @@
       "description": "Rent TRON Energy from JustLend marketplace"
     },
     {
+      "id": "justlend-energy-purchase",
+      "name": "Energy Direct Purchase",
+      "description": "Quote, buy, track, and safely recover direct TRON Energy purchases"
+    },
+    {
       "id": "justlend-governance-v1",
       "name": "DAO Governance",
       "description": "Participate in JustLend DAO proposal voting"

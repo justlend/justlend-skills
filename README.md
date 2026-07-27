@@ -15,15 +15,16 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 - **Protocol Dashboard**: Total supply, borrow, TVL, user count across the protocol
 - **Account Analysis**: Health factor monitoring, liquidation risk assessment, balance queries
 - **Token Allowances**: Check TRC20 approval status for JustLend contracts
+- **Energy Direct Purchase Workflow**: Quote, explicitly confirm, submit, track, and recover backend-broadcast energy payments through the full MCP server
 
 - **JustLend V2**: Isolated-market lending — curated ERC4626 supply vaults + permissionless `(collateral, loan)` borrow markets, with per-market `risk`/`lltv`, liquidation, and history (see the [V2 skill](skills/justlend-lending-v2/SKILL.md))
 
-> For advanced features (V2 lending, sTRX staking, energy rental, governance voting, mining rewards), use the full MCP server: [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend) (adds the V2 tools, WTRX wrap/unwrap, and AI prompts).
+> For advanced features (V2 lending, sTRX staking, energy rental/direct purchase, governance voting, mining rewards), use the full MCP server: [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend) (adds the V2 tools, WTRX wrap/unwrap, and AI prompts).
 
 **When to use this project:** an agent needs to *read* JustLend — market rates, a wallet's position and health, balances, or allowances — with only a TronGrid key and **no signing wallet**.
 
 **When *not* to use it:**
-- You need to **move funds** — supply/borrow/repay/withdraw, stake, vote, rent energy, wrap/unwrap. That is the [full MCP server](https://github.com/justlend/mcp-server-justlend) plus a signing wallet, not this project.
+- You need to **move funds** — supply/borrow/repay/withdraw, stake, vote, rent/buy energy, wrap/unwrap. That is the [full MCP server](https://github.com/justlend/mcp-server-justlend) plus a signing wallet, not this project's bundled read server.
 - You're on a **non-TRON chain** or a **different protocol** — these skills are JustLend/TRON-only and will not route.
 - You want raw node access with **no JustLend context** — call TronGrid directly instead.
 
@@ -45,6 +46,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 | `justlend-lending-v2` | — | ✅ | ✅ | ✅ | Yes |
 | `justlend-trx-staking` | — | ✅ | ✅ | ✅ | Yes |
 | `justlend-energy-rental` | — | ✅ | ✅ | ✅ | Yes |
+| `justlend-energy-purchase` | — | ✅ | ✅ | ✅ | Yes |
 | `justlend-governance-v1` | — | ✅ | ✅ | ✅ | Yes |
 
 Read-only skills work with just this repository + a TronGrid key. Every write skill routes through the full server and needs a **signing wallet** (agent-wallet or a browser wallet); the bundled server has no signing capability.
@@ -79,12 +81,14 @@ justlend-skills/
 │   ├── justlend-lending-v2/SKILL.md # V2 isolated lending guide
 │   ├── justlend-trx-staking/SKILL.md
 │   ├── justlend-energy-rental/SKILL.md
+│   ├── justlend-energy-purchase/SKILL.md
 │   └── justlend-governance-v1/SKILL.md
 ├── docs/                             # Protocol guides
 │   ├── justlend-guide.md            # Lending concepts & risk management
 │   ├── justlend-v2-guide.md         # V2 isolated-market concepts
 │   ├── strx-staking-guide.md        # sTRX staking guide
-│   └── resource-rental.md           # Energy rental guide
+│   ├── resource-rental.md           # Energy rental guide
+│   └── energy-purchase.md           # Energy direct-purchase safety boundary
 ├── SKILL.md                          # Main skill reference
 ├── install.sh                        # Quick setup script
 └── uninstall.sh                      # Cleanup script
@@ -232,7 +236,7 @@ OpenCode loads the bundled `.opencode/` plugin, which auto-discovers each skill 
 
 ### Verifying a client loaded the skills
 
-- **Discovery:** ask the agent *"which JustLend skills do you have?"* — it should name the five skills. If it lists none, the skills path/symlink is wrong (see [Troubleshooting](#troubleshooting)).
+- **Discovery:** ask the agent *"which JustLend skills do you have?"* — it should name the six skills. If it lists none, the skills path/symlink is wrong (see [Troubleshooting](#troubleshooting)).
 - **MCP tools:** ask for the tool list, or in Claude Code run `/mcp` — the `justlend` server should expose the 9 read tools (`get_all_markets`, `get_account_summary`, …).
 
 ### Handling conflicts
@@ -265,9 +269,10 @@ Each read tool takes an `address` and/or a token/jToken argument (exact inputs a
 | `justlend-lending-v2` | market / vault reads | `approve_vault` → `supply_collateral` / `borrow` / `withdraw_collateral` / `liquidate` | tx hash + position | same no-retry rule; `liquidate` is irreversible — confirm target and amount |
 | `justlend-trx-staking` | balance reads | `stake_trx_to_strx` / `unstake_strx` | tx hash | `unstake_strx` starts an **unbonding period** — not instant |
 | `justlend-energy-rental` | market reads | rental tools | tx hash + order | quote first; price can move between quote and order |
+| `justlend-energy-purchase` | config / quote / order / history / payment risk | `buy_energy_direct` | payment tx + order state | confirm exact quote; backend broadcasts; ambiguous results block a second payment |
 | `justlend-governance-v1` | `get_proposal_list`, `get_vote_info` | `approve_jst_for_voting` → `deposit_jst_for_votes` → `cast_vote` → `withdraw_votes_*` | tx hash + vote state | `deposit_jst_for_votes` locks JST as WJST until withdrawal |
 
-**Write failure contract (all skills):** the host must confirm each write with the user (HITL), simulate/preview first, and on any error **re-query state before retrying** — mutating calls are not idempotent.
+**Write failure contract:** the host must confirm each write with the user (HITL), preview first, and on any error **re-query state before retrying**. Mutating contract calls are not idempotent. Energy direct purchase is the narrow exception: its service may retry only the **same signed transaction** internally; it must never create a second payment silently.
 
 ## Agent Workflows
 
@@ -310,7 +315,7 @@ No funds move — the agent stops at advice because this project is read-only.
 
 - **This project is read-only.** The bundled MCP server (`scripts/mcp_server.mjs`) and the CLI only *query* — no transaction signing, no writes, no fund movement. It cannot move or lose funds.
 - **Credentials.** The only secret is a **TronGrid API key** (read-only RPC access), stored locally in `.env` (git-ignored). No signing key is used or stored by this project.
-- **Write operations live in the full server.** supply/borrow/repay/withdraw, sTRX staking, energy rental, and governance voting run through [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend), which requires a **signing wallet**. When you enable those, the host MUST:
+- **Write operations live in the full server.** supply/borrow/repay/withdraw, sTRX staking, energy rental/direct purchase, and governance voting run through [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend), which requires a **signing wallet**. When you enable those, the host MUST:
   - **confirm every write with the user (HITL)** before signing — show amount, market, and direction;
   - **never auto-retry a mutating call** (a repay / borrow / liquidate / vote may already have landed) — re-query state first;
   - simulate / preview first, and prefer **Nile testnet** (`NETWORK=nile`) before mainnet.
@@ -325,19 +330,21 @@ No funds move — the agent stops at advice because this project is read-only.
 | `justlend-lending-v2` | write incl. **`liquidate`** | borrow/repay yes; **liquidate no** | gas; liquidation seizes collateral | yes |
 | `justlend-trx-staking` | write | **`unstake` delayed** (unbonding) | gas + unbonding wait | yes |
 | `justlend-energy-rental` | write, **spends TRX** | no (consumed) | rental fee | yes |
+| `justlend-energy-purchase` | write, **signs TRX payment** | no after backend broadcast | quoted payment + possible activation fee | yes, exact quote |
 | `justlend-governance-v1` | write | vote reclaimable after proposal ends | **JST locked as WJST** | yes |
 
 ### If an agent misfires (recovery)
 
 - **Wrong skill / wrong market** → because writes are HITL, catch it at the confirm prompt: reject and restate market + amount. Nothing signs without approval.
 - **A write may have half-landed** (client crash, timeout) → do **not** re-send. Re-query `get_account_summary` (or `get_vote_info` / balances) for the real state, then decide.
+- **Direct-purchase result unknown** → call `get_energy_payment_risk`; never sign a second payment while the first is unresolved. The full server may retry only the same signed transaction.
 - **Accidental approval** → revoke by setting the allowance back to 0 (`amount='0'` on the approve tool — the same `approve(0)` the write flow uses).
 - **Stuck in unbonding / locked votes** → these are protocol timelocks, not errors; wait out the period, then `unstake_strx` / `withdraw_votes_*`.
 
 ## Data & Privacy
 
 - **What's read:** on-chain market/account data plus the JustLend read APIs. A queried **address is sent to TronGrid and the JustLend `/account` API** to fetch its balances / positions.
-- **What's stored:** nothing is persisted or logged by this project beyond your local `.env` key; no user data leaves your machine except the read requests above.
+- **What's stored:** the bundled read-only tools persist nothing beyond your local `.env` key. When the full server's energy purchase workflow is enabled, it stores public payer/tx identifiers (never signed transactions) in a local `0600` risk file so an ambiguous result blocks duplicate payment.
 
 ## Troubleshooting
 

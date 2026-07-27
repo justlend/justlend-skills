@@ -12,7 +12,7 @@
     {
       "name": "justlend-skills",
       "source": "./",
-      "description": "JustLend skills — get market data, monitor positions, deposit/withdraw assets, borrow/repay loans, stake sTRX, and participate in DAO governance.",
+      "description": "JustLend skills — get market data, manage lending positions, stake sTRX, rent or directly buy energy, and participate in DAO governance.",
       "version": "1.1.0",
       "author": {
         "name": "justlend-skills"

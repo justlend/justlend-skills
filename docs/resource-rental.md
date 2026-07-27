@@ -2,6 +2,9 @@
 
 JustLend provides a marketplace for renting Energy, which is required for smart contract interactions on TRON.
 
+This is the multi-step rental product. For the separately quoted, backend-broadcast direct-purchase
+flow, use [`justlend-energy-purchase`](../skills/justlend-energy-purchase/SKILL.md).
+
 ## Why Rent Energy?
 - **Save Costs**: Renting Energy is often cheaper than burning TRX for transaction fees.
 - **High Throughput**: Perform more transactions without waiting for daily free energy.
