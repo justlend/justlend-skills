@@ -3,11 +3,12 @@
   "slug": "justlend-skills",
   "displayName": "JustLend DAO Skills",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1750118400000,
+    "version": "1.1.1",
+    "publishedAt": 1787129972000,
     "commit": ""
   },
   "history": [
+    { "version": "1.1.0", "publishedAt": 1750118400000, "commit": "" },
     { "version": "1.0.0", "publishedAt": 1741622400000 }
   ],
   "keywords": [

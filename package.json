@@ -1,6 +1,6 @@
 {
   "name": "@justlend/justlend-skills",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "AI Agent skills for JustLend DAO on TRON — structured instructions and MCP tools for V1 pooled lending, V2 isolated lending, staking, energy rental, and governance operations.",
   "main": "scripts/mcp_server.mjs",
@@ -8,7 +8,8 @@
   "scripts": {
     "start": "node scripts/mcp_server.mjs",
     "dev": "npx nodemon scripts/mcp_server.mjs",
-    "test": "node scripts/justlend_api.mjs markets"
+    "test": "node --test tests/*.test.mjs",
+    "test:smoke": "node scripts/verify_market_inventory.mjs"
   },
   "keywords": [
     "mcp",

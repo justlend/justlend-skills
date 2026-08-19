@@ -30,7 +30,7 @@ This skill enables AI agents to interact with the [JustLend DAO](https://justlen
 | `get_dashboard` | — | Protocol overview: total supply, total borrow, TVL, user count |
 | `get_jtoken_details` | `jtokenAddr` | Detailed jToken info: interest rate model, reserves, mining rewards |
 | `get_account_data_from_api` | `address` | Comprehensive account data from API (positions, balances, rewards) |
-| `get_supported_markets` | — | List all supported markets with jToken/underlying addresses |
+| `get_supported_markets` | — | List the 8 bundled balance/allowance shortcuts with addresses |
 | `check_allowance` | `address`, `asset` | Check TRC20 approval status for JustLend contracts |
 
 ## Critical Rules
@@ -52,7 +52,7 @@ Always call `get_account_summary` before advising a user about their position. I
 ### Check Token Approval Status
 1. `check_allowance` — verify if a TRC20 token is approved for JustLend
 
-## Supported Assets
+## Bundled Asset Shortcuts
 
 | Symbol | Type | jToken Address |
 |--------|------|---------------|
@@ -65,7 +65,11 @@ Always call `get_account_summary` before advising a user about their position. I
 | SUN  | TRC20 | `TPXDpkg9e3eZzxqxAUyke9S4z4pGJBJw9e` |
 | WIN  | TRC20 | `TRg6MnpsFXc82ymUPgf5qbj59ibxiEDWvv` |
 
-> For the full list of 24+ supported markets, use the full MCP server: [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)
+> This shortcut table is not the protocol roster. The verified V1 inventory is **24 markets (18 active + 6 legacy)**, including active `jU`. Use `get_all_markets` for the visible live inventory or the full MCP server for the complete static address catalog.
+
+## MCP Output Contract
+
+Prefer `structuredContent`: successes return `{ schemaVersion: "1.0.0", tool, result }`; failures return `{ schemaVersion, tool, error, errorCode, retryable, hint }` with `isError: true`. Only `rate_limit` and `transient` failures are safe to retry automatically with backoff. The text content preserves the raw JSON success payload for older clients.
 
 ## Example Prompts
 
@@ -74,7 +78,7 @@ Always call `get_account_summary` before advising a user about their position. I
 - "Check my JustLend account — is my position safe from liquidation?"
 - "Show me detailed info for the jUSDT market including the interest rate model."
 - "How much TRX do I have in my wallet?"
-- "List all supported JustLend markets and their addresses."
+- "List the bundled balance and allowance shortcuts with their addresses."
 
 ## Security
 

@@ -28,7 +28,7 @@ Core query skill for JustLend DAO on TRON. Enables AI agents to query market dat
 |------|-------------|
 | `get_all_markets` | All markets with supply/borrow APY, mining rewards, and TVL |
 | `get_dashboard` | Protocol overview: total supply, borrow, TVL, user count |
-| `get_supported_markets` | List all supported markets with addresses |
+| `get_supported_markets` | List the 8 bundled balance/allowance shortcuts with addresses |
 | `get_jtoken_details` | Detailed jToken info: interest rate model, reserves, mining rewards |
 | `get_account_summary` | Health factor, liquidity, liquidation risk |
 | `get_account_data_from_api` | Comprehensive account data from API (positions, rewards) |
@@ -43,4 +43,4 @@ Core query skill for JustLend DAO on TRON. Enables AI agents to query market dat
 - "What's the detailed info for the jUSDT market?"
 - "Check my JustLend account — is my position safe from liquidation?"
 - "Do I have USDT approved for JustLend?"
-- "List all supported JustLend markets and their addresses."
+- "List the bundled JustLend balance and allowance shortcuts."
