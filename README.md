@@ -9,6 +9,8 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 
 > **Distribution:** install this project from [GitHub](https://github.com/justlend/justlend-skills); it is not published to the npm registry. The scoped name in `package.json` identifies the project for local tooling only. Do not run `npm install @justlend/justlend-skills`—clone the repository and run `bash install.sh` as described below. The `npm install` command used inside the clone installs this project's dependencies.
 
+**Current version:** `1.1.1` · bundled MCP output contract: `1.0.0`
+
 ## Features
 
 - **Market Data**: Real-time APY (including mining rewards), TVL, and utilization for all JustLend markets
@@ -35,7 +37,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 | **Skills (this repository)** | Agent instruction files (`SKILL.md`) + a bundled read-only MCP server (9 tools) | An agent needs to *query* JustLend — markets, your position/health, balances, allowances | No |
 | **Bundled MCP server** (`npm start`) | The 9-tool read-only stdio server shipped here | Same, wired into a client (Claude / Cursor / Codex / OpenCode) | No |
 | **CLI** (`node scripts/justlend_api.mjs`) | One-shot terminal queries | Quick manual checks / scripting reads | No |
-| **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | 98-tool read + **write** server | You need to *act*: supply/borrow/repay/withdraw, stake, rent energy, vote, liquidate | **Yes** (signing wallet required) |
+| **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | 103-tool read + **write** server | You need to *act*: supply/borrow/repay/withdraw, stake, rent or buy energy, vote, liquidate | **Yes** (signing wallet required) |
 
 ### Skill → dependency matrix
 
@@ -53,20 +55,24 @@ Read-only skills work with just this repository + a TronGrid key. Every write sk
 
 **Graceful degradation.** If the full MCP server or a signing wallet is absent, the read-only skills still work unchanged — the agent can quote rates, read a position, and check allowances, then tell the user exactly what to install (the full server) and connect (a wallet) to act. A write skill invoked without the full server should **stop and report the missing dependency**, never silently no-op or fake a result.
 
-## Supported Markets
+## Market Inventory and Bundled Shortcuts
 
-| jToken | Underlying | Description |
-|--------|-----------|-------------|
-| jTRX   | TRX       | Native TRON token |
-| jUSDT  | USDT      | Tether USD |
-| jUSDD  | USDD      | Decentralized USD |
-| jUSDC  | USDC      | USD Coin |
-| jBTC   | BTC       | Bitcoin (TRC20) |
-| jETH   | ETH       | Ethereum (TRC20) |
-| jSUN   | SUN       | SUN Token |
-| jWIN   | WIN       | WINkLink |
+The canonical JustLend V1 snapshot contains **24 markets: 18 active + 6 legacy** (verified against the expanded [JustLend app](https://app.justlend.org/) market table and live `/lend/jtoken` API on 2026-08-19). Active `jU` is included in that count.
 
-> The full MCP server supports 24+ markets including jsTRX, jwstUSDT, jWBTC, and more.
+The following table is deliberately narrower: these are the **8 static shortcuts bundled in `scripts/justlend_api.mjs`** for `get_token_balance` and `check_allowance`. It is not the canonical protocol roster. `get_all_markets` queries the live API for the visible protocol inventory; `get_supported_markets` lists only these bundled shortcuts.
+
+| Shortcut | jToken | Underlying | Status / purpose |
+|----------|--------|------------|------------------|
+| `TRX` | jTRX | TRX | Active; native balance, no allowance |
+| `USDT` | jUSDT | USDT | Active shortcut |
+| `USDD` | jUSDD | USDD | Active shortcut |
+| `USDC` | jUSDCOLD | USDCOLD | Legacy compatibility shortcut |
+| `BTC` | jBTC | BTC | Active shortcut |
+| `ETH` | jETH | ETH | Active shortcut |
+| `SUN` | jSUN | SUN | Active shortcut |
+| `WIN` | jWIN | WIN | Active shortcut |
+
+> The full MCP server exposes the complete **24-market V1 roster**, including `jsTRX`, `jwstUSDT`, `jWBTC`, and `jU`. Do not infer the protocol total from this package's shortcut table.
 
 ## Project Structure
 
@@ -74,7 +80,10 @@ Read-only skills work with just this repository + a TronGrid key. Every write sk
 justlend-skills/
 ├── scripts/                          # Core implementation
 │   ├── mcp_server.mjs               # MCP server (9 read-only tools, stdio transport)
+│   ├── mcp_tools.mjs                # Tool catalog with input/output schemas
+│   ├── mcp_contract.mjs             # Versioned success/error envelopes
 │   └── justlend_api.mjs             # JustLend API client & CLI tool
+├── tests/                            # Deterministic MCP contract tests
 ├── skills/                           # Agent skill instructions
 │   ├── _meta.json                   # Skill metadata
 │   ├── justlend-lending-v1/SKILL.md # V1 pooled lending operations guide
@@ -109,6 +118,7 @@ Or, after cloning the repository, install its dependencies manually:
 ```bash
 npm install
 cp .env.example .env   # Then edit .env with your keys
+npm test               # Offline contract tests; no key or network required
 ```
 
 ### 2. Configure
@@ -149,10 +159,11 @@ node scripts/justlend_api.mjs allowance <addr> USDT    # Check TRC20 approval
 
 ```bash
 node scripts/justlend_api.mjs markets    # should print a table of markets + APY
+npm run test:smoke                       # assert the live canonical 24-market roster
 npm test                                 # bundled server self-check (if dev deps installed)
 ```
 
-If `markets` prints rows, the TronGrid key and read path work. An empty result or `401`/`403` means the key is missing or invalid (see [Troubleshooting](#troubleshooting)).
+If `markets` prints rows, the TronGrid key and read path work. `npm run test:smoke` additionally fails if the live roster differs from the verified **18 active + 6 legacy = 24** snapshot or omits `jU`. An empty result or `401`/`403` means the key is missing or invalid (see [Troubleshooting](#troubleshooting)).
 
 ### 5. Upgrade
 
@@ -250,7 +261,7 @@ OpenCode loads the bundled `.opencode/` plugin, which auto-discovers each skill 
 |------|-------------|
 | `get_all_markets` | All markets with supply/borrow APY, mining rewards, and TVL |
 | `get_dashboard` | Protocol overview: total supply, borrow, TVL, user count |
-| `get_supported_markets` | List all supported markets with jToken/underlying addresses |
+| `get_supported_markets` | List the 8 bundled static balance/allowance shortcuts |
 | `get_jtoken_details` | Detailed jToken info: interest rate model, reserves, mining rewards |
 | `get_account_summary` | Health factor, liquidity, liquidation risk |
 | `get_account_data_from_api` | Comprehensive account data from API (positions, rewards) |
@@ -258,7 +269,17 @@ OpenCode loads the bundled `.opencode/` plugin, which auto-discovers each skill 
 | `get_token_balance` | TRC20 token balance (USDT, USDD, etc.) |
 | `check_allowance` | Check TRC20 approval status for JustLend contracts |
 
-Each read tool takes an `address` and/or a token/jToken argument (exact inputs are in each skill's `SKILL.md`) and returns JSON. On failure the **bundled server** returns a plain-text `Error: <message>` result flagged `isError` — never a thrown exception. The **full server** goes further and structures errors as `{ error, errorCode, retryable, hint }`, so an agent can branch on `retryable` and act on the `hint` without parsing prose.
+Each read tool declares both `inputSchema` and `outputSchema`. Successful calls retain the legacy raw JSON text and add this MCP `structuredContent` envelope:
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "tool": "get_all_markets",
+  "result": []
+}
+```
+
+Failures are flagged `isError` and return the same JSON in text and `structuredContent`: `{ schemaVersion, tool, error, errorCode, retryable, hint }`. Stable codes are `invalid_input`, `authentication`, `rate_limit`, `transient`, and `internal`. Only `rate_limit` and `transient` are safe to retry automatically, using backoff. Consumers should pin the schema major and prefer `structuredContent`; the full server uses the same `schemaVersion` / `tool` / `result` success fields.
 
 ## Skill Inputs, Outputs & Failure Handling
 
@@ -359,7 +380,7 @@ No funds move — the agent stops at advice because this project is read-only.
 | MCP server won't start | Node < 20, or deps not installed | `node -v` (need v20+); run `npm install` |
 | Behaviour changed after update | version / manifest drift | compare installed version with [`CHANGELOG.md`](CHANGELOG.md); re-run `npm install` and restart |
 
-**Logs & version.** The CLI and server print errors to stderr — run the CLI command directly to see the raw error and the offending address/token. Include the project version from `package.json` / `skills/_meta.json` when filing an issue.
+**Logs & version.** The server emits lifecycle/fatal logs to stderr and returns tool failures through the structured error contract above; the CLI prints errors to stderr. Run the CLI command directly to diagnose the offending address/token. Include the project version from `package.json` / `skills/_meta.json` and output `schemaVersion` when filing an issue.
 
 ## License
 
