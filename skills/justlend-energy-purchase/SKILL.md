@@ -4,7 +4,7 @@ description: >-
   Buy TRON Energy directly through JustLend using an authoritative API quote and
   a native TRX payment that is signed locally but broadcast by the configured
   backend. Use when the user wants to buy energy immediately, compare direct
-  purchase pricing, inspect a purchase order/history, or recover an uncertain
+  purchase pricing, inspect a purchase order, or recover an uncertain
   payment. Writes require the full MCP server, an explicitly configured energy
   API, a signing wallet, and per-payment user confirmation. Not for long-term
   energy rental or staking/freezing TRX for resources.
@@ -22,7 +22,6 @@ The bundled read-only server in this repository does not sign payments.
 | `get_energy_purchase_config` | Live limits, durations, prices, and pool capacity | No |
 | `quote_energy_purchase` | Authoritative quote; does not create or reserve an order | No |
 | `get_energy_purchase_order` | Order and delivery state | No |
-| `get_energy_purchase_history` | Settled history by payer | No |
 | `get_energy_payment_risk` | Reconcile a payment with an uncertain result | No |
 | `buy_energy_direct` | Sign a TRX payment and submit it for backend broadcast | **Yes** |
 
@@ -67,4 +66,3 @@ The bundled read-only server in this repository does not sign payments.
 - Use `justlend-energy-rental` for multi-day rental or return/cancel workflows.
 - Use this skill for the separately quoted direct-purchase service.
 - Explain the distinction before moving funds when the user's wording is ambiguous.
-

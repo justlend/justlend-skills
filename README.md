@@ -290,7 +290,7 @@ Failures are flagged `isError` and return the same JSON in text and `structuredC
 | `justlend-lending-v2` | market / vault reads | `approve_vault` → `supply_collateral` / `borrow` / `withdraw_collateral` / `liquidate` | tx hash + position | same no-retry rule; `liquidate` is irreversible — confirm target and amount |
 | `justlend-trx-staking` | balance reads | `stake_trx_to_strx` / `unstake_strx` | tx hash | `unstake_strx` starts an **unbonding period** — not instant |
 | `justlend-energy-rental` | market reads | rental tools | tx hash + order | quote first; price can move between quote and order |
-| `justlend-energy-purchase` | config / quote / order / history / payment risk | `buy_energy_direct` | payment tx + order state | confirm exact quote; backend broadcasts; ambiguous results block a second payment |
+| `justlend-energy-purchase` | config / quote / order / payment risk | `buy_energy_direct` | payment tx + order state | confirm exact quote; backend broadcasts; ambiguous results block a second payment |
 | `justlend-governance-v1` | `get_proposal_list`, `get_vote_info` | `approve_jst_for_voting` → `deposit_jst_for_votes` → `cast_vote` → `withdraw_votes_*` | tx hash + vote state | `deposit_jst_for_votes` locks JST as WJST until withdrawal |
 
 **Write failure contract:** the host must confirm each write with the user (HITL), preview first, and on any error **re-query state before retrying**. Mutating contract calls are not idempotent. Energy direct purchase is the narrow exception: its service may retry only the **same signed transaction** internally; it must never create a second payment silently.
