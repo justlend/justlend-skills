@@ -57,3 +57,13 @@ test("errors expose a stable code, retryability, and remediation hint", () => {
     hint: "Correct the tool name or arguments before retrying.",
   });
 });
+
+test("energy purchase instructions bind confirmation to the authoritative quote", () => {
+  const skill = readFileSync(
+    new URL("../skills/justlend-energy-purchase/SKILL.md", import.meta.url),
+    "utf8",
+  );
+  assert.match(skill, /quoted `total_sun` as `expectedAmountSun`/);
+  assert.doesNotMatch(skill, /`amount_sun`/);
+  assert.match(skill, /order and payment-risk state/);
+});

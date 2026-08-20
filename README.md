@@ -23,7 +23,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 
 > For advanced features (V2 lending, sTRX staking, energy rental/direct purchase, governance voting, mining rewards), use the full MCP server: [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend) (adds the V2 tools, WTRX wrap/unwrap, and AI prompts).
 
-**When to use this project:** an agent needs to *read* JustLend — market rates, a wallet's position and health, balances, or allowances — with only a TronGrid key and **no signing wallet**.
+**When to use this project:** an agent needs JustLend-specific workflow instructions. Its bundled MCP server supports read-only market, position, balance, and allowance queries with only a TronGrid key; write-oriented skill modules route execution to the full MCP server and a signing wallet.
 
 **When *not* to use it:**
 - You need to **move funds** — supply/borrow/repay/withdraw, stake, vote, rent/buy energy, wrap/unwrap. That is the [full MCP server](https://github.com/justlend/mcp-server-justlend) plus a signing wallet, not this project's bundled read server.
@@ -34,7 +34,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 
 | Mode | What it is | Use when | Writes? |
 |------|-----------|----------|:------:|
-| **Skills (this repository)** | Agent instruction files (`SKILL.md`) + a bundled read-only MCP server (9 tools) | An agent needs to *query* JustLend — markets, your position/health, balances, allowances | No |
+| **Skills (this repository)** | Agent instruction files (`SKILL.md`) + a bundled read-only MCP server (9 tools) | An agent needs guided read or write workflows; writes route to the full MCP server | Via full MCP only |
 | **Bundled MCP server** (`npm start`) | The 9-tool read-only stdio server shipped here | Same, wired into a client (Claude / Cursor / Codex / OpenCode) | No |
 | **CLI** (`node scripts/justlend_api.mjs`) | One-shot terminal queries | Quick manual checks / scripting reads | No |
 | **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | 103-tool read + **write** server | You need to *act*: supply/borrow/repay/withdraw, stake, rent or buy energy, vote, liquidate | **Yes** (signing wallet required) |

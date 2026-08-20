@@ -30,10 +30,10 @@ The bundled read-only server in this repository does not sign payments.
 1. Require `JUSTLEND_ENERGY_API_URL`. If it is missing or untrusted, stop; never substitute another JustLend API host.
 2. Load `get_energy_purchase_config` and use its limits, durations, and prices. Do not invent economic fallback values.
 3. Call `quote_energy_purchase` immediately before every purchase.
-4. Show the user the payer, every receiver, energy per receiver, duration, exact `amount_sun` converted to TRX, and the fact that the backend may broadcast the payment.
-5. Call `buy_energy_direct` only after explicit confirmation of that exact payment. Pass the quoted `amount_sun` as `expectedAmountSun` and set `confirmPayment=true` only then.
+4. Show the user the payer, every receiver, energy per receiver, duration, exact `total_sun` converted to TRX, and the fact that the backend may broadcast the payment.
+5. Call `buy_energy_direct` only after explicit confirmation of that exact payment. Pass the quoted `total_sun` as `expectedAmountSun` and set `confirmPayment=true` only then.
 6. Never request, display, log, or persist a private key or signed transaction. Treat a signed payment as broadcastable until expiry.
-7. Never broadcast the payment locally. The configured backend validates and broadcasts it.
+7. Never broadcast the payment locally. The configured backend validates and may broadcast it.
 8. On a timeout or unknown submission result, retry only the same signed transaction through the tool's internal workflow. Never initiate another purchase silently.
 9. If `payment_result_unknown`, `tx_already_claimed`, or `payment_risk_unresolved` appears, call `get_energy_payment_risk`; block a new payment until reconciliation succeeds.
 
@@ -47,7 +47,7 @@ The bundled read-only server in this repository does not sign payments.
 6. Call `buy_energy_direct` with the confirmed quote amount.
 7. Report the payment tx hash and order id. Track non-terminal orders with `get_energy_purchase_order`.
 8. Treat only `delivered`, `partial`, `failed`, `expired`, and `cancelled` as terminal. Do not describe `paid`, `pending`, or `delegating` as delivered.
-9. Re-query history/order state before any retry after a post-payment error.
+9. Re-query order and payment-risk state before any retry after a post-payment error.
 
 ## Error Handling
 
