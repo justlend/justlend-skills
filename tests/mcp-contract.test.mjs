@@ -65,5 +65,8 @@ test("energy purchase instructions bind confirmation to the authoritative quote"
   );
   assert.match(skill, /quoted `total_sun` as `expectedAmountSun`/);
   assert.doesNotMatch(skill, /`amount_sun`/);
-  assert.match(skill, /order and payment-risk state/);
+  assert.match(skill, /official default `https:\/\/tegrow\.ablesdxd\.link`/);
+  assert.match(skill, /get_energy_purchase_history/);
+  assert.match(skill, /exact signed request/);
+  assert.match(skill, /purchase history, order state when a token exists, and payment-risk state/);
 });

@@ -290,7 +290,7 @@ Failures are flagged `isError` and return the same JSON in text and `structuredC
 | `justlend-lending-v2` | market / vault reads | `approve_vault` → `supply_collateral` / `borrow` / `withdraw_collateral` / `liquidate` | tx hash + position | same no-retry rule; `liquidate` is irreversible — confirm target and amount |
 | `justlend-trx-staking` | balance reads | `stake_trx_to_strx` / `unstake_strx` | tx hash | `unstake_strx` starts an **unbonding period** — not instant |
 | `justlend-energy-rental` | market reads | rental tools | tx hash + order | quote first; price can move between quote and order |
-| `justlend-energy-purchase` | config / quote / order / payment risk | `buy_energy_direct` | payment tx + order state | confirm exact quote; backend broadcasts; ambiguous results block a second payment |
+| `justlend-energy-purchase` | config / quote / order / public history / payment risk | `buy_energy_direct` | payment tx + order state | confirm exact quote; backend broadcasts; ambiguous results block a second payment |
 | `justlend-governance-v1` | `get_proposal_list`, `get_vote_info` | `approve_jst_for_voting` → `deposit_jst_for_votes` → `cast_vote` → `withdraw_votes_*` | tx hash + vote state | `deposit_jst_for_votes` locks JST as WJST until withdrawal |
 
 **Write failure contract:** the host must confirm each write with the user (HITL), preview first, and on any error **re-query state before retrying**. Mutating contract calls are not idempotent. Energy direct purchase is the narrow exception: its service may retry only the **same signed transaction** internally; it must never create a second payment silently.
@@ -358,14 +358,14 @@ No funds move — the agent stops at advice because this project is read-only.
 
 - **Wrong skill / wrong market** → because writes are HITL, catch it at the confirm prompt: reject and restate market + amount. Nothing signs without approval.
 - **A write may have half-landed** (client crash, timeout) → do **not** re-send. Re-query `get_account_summary` (or `get_vote_info` / balances) for the real state, then decide.
-- **Direct-purchase result unknown** → call `get_energy_payment_risk`; never sign a second payment while the first is unresolved. The full server may retry only the same signed transaction.
+- **Direct-purchase result unknown** → call `get_energy_purchase_history`, then `get_energy_payment_risk`; never sign a second payment while the first is unresolved. The full server may retry only the same signed transaction.
 - **Accidental approval** → revoke by setting the allowance back to 0 (`amount='0'` on the approve tool — the same `approve(0)` the write flow uses).
 - **Stuck in unbonding / locked votes** → these are protocol timelocks, not errors; wait out the period, then `unstake_strx` / `withdraw_votes_*`.
 
 ## Data & Privacy
 
 - **What's read:** on-chain market/account data plus the JustLend read APIs. A queried **address is sent to TronGrid and the JustLend `/account` API** to fetch its balances / positions.
-- **What's stored:** the bundled read-only tools persist nothing beyond your local `.env` key. When the full server's energy purchase workflow is enabled, it stores public payer/tx identifiers (never signed transactions) in a local `0600` risk file so an ambiguous result blocks duplicate payment.
+- **What's stored:** the bundled read-only tools persist nothing beyond your local `.env` key. After the full server signs an energy payment, an ambiguous result may store the exact signed request (signature plus raw transaction) in a local mode-`0600` risk file. It is broadcastable until expiry, is redacted from normal output, and remains only until history confirms the payment/order or a deterministic pre-broadcast rejection clears it.
 
 ## Troubleshooting
 
