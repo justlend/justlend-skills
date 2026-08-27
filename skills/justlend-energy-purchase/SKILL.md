@@ -24,7 +24,7 @@ The bundled read-only server in this repository does not sign payments.
 | `quote_energy_purchase` | Authoritative quote; does not create or reserve an order | No |
 | `get_energy_purchase_order` | Order and delivery state | No |
 | `get_energy_purchase_history` | Public payer history for in-progress and settled orders | No |
-| `get_energy_payment_risk` | Reconcile a payment with an uncertain result | No |
+| `get_energy_payment_risk` | Report unresolved risks for the configured wallet; no inputs and no payment replay | No |
 | `buy_energy_direct` | Sign a TRX payment and submit it for backend broadcast | **Yes** |
 
 ## Safety Rules
@@ -37,7 +37,7 @@ The bundled read-only server in this repository does not sign payments.
 6. Never request, display, or log a private key or signed transaction. The full server may persist the exact signed request in its local mode-`0600` recovery file after signing; treat it as sensitive and broadcastable until expiry. Normal MCP output must redact it.
 7. Never broadcast the payment locally. The configured backend validates and may broadcast it.
 8. On a timeout or unknown submission result, retry only the same signed transaction through the tool's internal workflow. Never initiate another purchase silently.
-9. If `payment_result_unknown`, `tx_already_claimed`, `payment_risk_unresolved`, or `reconciliationRequired=true` appears, call `get_energy_purchase_history` and then `get_energy_payment_risk`; block a new payment until the risk list is empty.
+9. If `payment_result_unknown`, `tx_already_claimed`, `payment_risk_unresolved`, or `reconciliationRequired=true` appears, call `get_energy_purchase_history` and then call `get_energy_payment_risk` with no arguments. The risk check only reports state for the configured wallet; it never replays or clears a stored payment. Block a new payment until recovery succeeds and the risk list is empty. Any replay of the exact stored request may occur only inside a separately user-confirmed `buy_energy_direct` call.
 
 ## Purchase Workflow
 
@@ -49,7 +49,7 @@ The bundled read-only server in this repository does not sign payments.
 6. Call `buy_energy_direct` with the confirmed quote amount.
 7. Report the payment tx hash and order id. Track token-bearing non-terminal orders with `get_energy_purchase_order`; if an idempotent retry returns no token, return the pending result immediately and recover it through `get_energy_purchase_history` instead of polling without credentials.
 8. Treat only `delivered`, `partial`, `failed`, `expired`, and `cancelled` as terminal. Do not describe `paid`, `pending`, or `delegating` as delivered.
-9. Re-query purchase history, order state when a token exists, and payment-risk state before any retry after a post-payment error.
+9. Re-query purchase history and order state when a token exists, then call the no-argument `get_energy_payment_risk` check before any retry after a post-payment error. Treat it as observation only, not reconciliation.
 
 ## Error Handling
 
@@ -59,9 +59,9 @@ The bundled read-only server in this repository does not sign payments.
 | `pool_insufficient` | Lower the requested energy/receiver count or wait; do not sign |
 | `invalid_duration` | Use a duration from live config |
 | `user_rejected` | Stop; do not retry automatically |
-| `tx_expired` / `broadcast_failed` | Reconcile first, then obtain a new quote and confirmation |
+| `tx_expired` / `broadcast_failed` | Inspect history and the no-argument risk state first; recover only through a newly confirmed tool call |
 | `delivery_failed` | Payment may already have moved; show tx/order and re-query state |
-| `payment_result_unknown` | Block new payment; query public history, then run risk reconciliation |
+| `payment_result_unknown` | Block new payment; query public history, then inspect the configured wallet with the no-argument risk tool |
 
 ## Routing
 

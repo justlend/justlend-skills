@@ -37,7 +37,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 | **Skills (this repository)** | Agent instruction files (`SKILL.md`) + a bundled read-only MCP server (9 tools) | An agent needs guided read or write workflows; writes route to the full MCP server | Via full MCP only |
 | **Bundled MCP server** (`npm start`) | The 9-tool read-only stdio server shipped here | Same, wired into a client (Claude / Cursor / Codex / OpenCode) | No |
 | **CLI** (`node scripts/justlend_api.mjs`) | One-shot terminal queries | Quick manual checks / scripting reads | No |
-| **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | 103-tool read + **write** server | You need to *act*: supply/borrow/repay/withdraw, stake, rent or buy energy, vote, liquidate | **Yes** (signing wallet required) |
+| **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | 104-tool read + **write** server | You need to *act*: supply/borrow/repay/withdraw, stake, rent or buy energy, vote, liquidate | **Yes** (signing wallet required) |
 
 ### Skill → dependency matrix
 
@@ -358,14 +358,14 @@ No funds move — the agent stops at advice because this project is read-only.
 
 - **Wrong skill / wrong market** → because writes are HITL, catch it at the confirm prompt: reject and restate market + amount. Nothing signs without approval.
 - **A write may have half-landed** (client crash, timeout) → do **not** re-send. Re-query `get_account_summary` (or `get_vote_info` / balances) for the real state, then decide.
-- **Direct-purchase result unknown** → call `get_energy_purchase_history`, then `get_energy_payment_risk`; never sign a second payment while the first is unresolved. The full server may retry only the same signed transaction.
+- **Direct-purchase result unknown** → call `get_energy_purchase_history`, then call `get_energy_payment_risk` with no arguments. The configured-wallet risk check is read-only and never replays a payment. Never sign a second payment while the first is unresolved; any exact-request replay occurs only inside a separately confirmed `buy_energy_direct` call.
 - **Accidental approval** → revoke by setting the allowance back to 0 (`amount='0'` on the approve tool — the same `approve(0)` the write flow uses).
 - **Stuck in unbonding / locked votes** → these are protocol timelocks, not errors; wait out the period, then `unstake_strx` / `withdraw_votes_*`.
 
 ## Data & Privacy
 
 - **What's read:** on-chain market/account data plus the JustLend read APIs. A queried **address is sent to TronGrid and the JustLend `/account` API** to fetch its balances / positions.
-- **What's stored:** the bundled read-only tools persist nothing beyond your local `.env` key. After the full server signs an energy payment, an ambiguous result may store the exact signed request (signature plus raw transaction) in a local mode-`0600` risk file. It is broadcastable until expiry, is redacted from normal output, and remains only until history confirms the payment/order or a deterministic pre-broadcast rejection clears it.
+- **What's stored:** the bundled read-only tools persist nothing beyond your local `.env` key. After the full server signs an energy payment, an ambiguous result may store the exact signed request (signature plus raw transaction) in a local mode-`0600` risk file. It is broadcastable until expiry, is redacted from normal output, and remains only until history confirms the payment/order or a deterministic pre-broadcast rejection clears it. The no-argument risk check only reports this configured-wallet state; it does not replay or clear the request.
 
 ## Troubleshooting
 

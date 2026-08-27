@@ -18,7 +18,7 @@ All notable changes to `justlend-skills`. Format based on Keep a Changelog.
 - Renamed the 8-market table as bundled balance/allowance shortcuts so agents do not mistake it for the complete protocol roster.
 - Server version now comes from `package.json`; package, Skills metadata, and client plugin manifests advance together to `1.1.1`.
 - Refreshed transitive dependency overrides so production and development audits report no known vulnerabilities.
-- Aligned energy direct-purchase guidance with the official mainnet default, public payer-history recovery, tokenless idempotent responses, and the exact signed-request recovery-file boundary.
+- Aligned energy direct-purchase guidance with the official mainnet default, public payer-history recovery, tokenless idempotent responses, the exact signed-request recovery-file boundary, and the no-argument configured-wallet risk check.
 
 ### Added (docs / agent-readiness)
 - **Agent Workflows** — closed-loop examples: read+advise routing, V1/V2 disambiguation, a HITL write path, and error/boundary handling.

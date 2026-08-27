@@ -68,5 +68,7 @@ test("energy purchase instructions bind confirmation to the authoritative quote"
   assert.match(skill, /official default `https:\/\/tegrow\.ablesdxd\.link`/);
   assert.match(skill, /get_energy_purchase_history/);
   assert.match(skill, /exact signed request/);
-  assert.match(skill, /purchase history, order state when a token exists, and payment-risk state/);
+  assert.match(skill, /get_energy_payment_risk` with no arguments/);
+  assert.match(skill, /never replays or clears a stored payment/);
+  assert.match(skill, /separately user-confirmed `buy_energy_direct` call/);
 });
