@@ -3,7 +3,22 @@
 All notable changes to `justlend-skills`. Format based on Keep a Changelog.
 `SPDX-License-Identifier: MIT`. Exact publish timestamps: see `skills/_meta.json`.
 
-## [Unreleased]
+## [1.1.1] — 2026-08-19
+
+### Added (MCP contract)
+- Added the `justlend-energy-purchase` skill for quote-first, explicitly confirmed direct energy purchases with order recovery and duplicate-payment safeguards.
+- All 9 bundled read tools now declare a common `outputSchema` and return versioned `structuredContent` while preserving the legacy JSON text payload.
+- Bundled server failures now expose stable `errorCode`, `retryable`, and `hint` fields in JSON instead of prose-only errors.
+- Read API failures now propagate to the MCP classifier, and the bundled CLI exits nonzero on execution failures.
+- Offline Node tests lock tool count, schema coverage, backward-compatible success output, and retry classification.
+- A live smoke check fails on canonical market-count or symbol drift instead of merely printing API output.
+
+### Fixed (market inventory)
+- Reconciled the canonical V1 inventory to **24 markets (18 active + 6 legacy)**, including active `jU`.
+- Renamed the 8-market table as bundled balance/allowance shortcuts so agents do not mistake it for the complete protocol roster.
+- Server version now comes from `package.json`; package, Skills metadata, and client plugin manifests advance together to `1.1.1`.
+- Refreshed transitive dependency overrides so production and development audits report no known vulnerabilities.
+- Aligned energy direct-purchase guidance with the official mainnet default, public payer-history recovery, tokenless idempotent responses, the exact signed-request recovery-file boundary, and the no-argument configured-wallet risk check.
 
 ### Added (docs / agent-readiness)
 - **Agent Workflows** — closed-loop examples: read+advise routing, V1/V2 disambiguation, a HITL write path, and error/boundary handling.
@@ -14,11 +29,12 @@ All notable changes to `justlend-skills`. Format based on Keep a Changelog.
 
 ### Fixed (docs accuracy)
 - Installation guidance now identifies GitHub as the distribution source and explicitly notes that `@justlend/justlend-skills` is not published to npm; the package is marked private to prevent accidental publication.
-- Error-shape claims corrected to match the implementations: the **bundled** server returns a plain-text `Error: <message>` + `isError` (no structured fields); the structured `{ error, errorCode, retryable, hint }` envelope belongs to the **full** server only.
+- Error-shape documentation now distinguishes the bundled versioned MCP envelope from the full server's broader tool-specific error catalog.
 - USDT/USDC/USDJ approve wording: the reset-to-0 is **defensive** (front-end parity; on-chain probing shows current TRON deployments don't enforce the guard), not a protocol requirement.
 
 ### Migration
-- Documentation only — no code, tool, or API changes. No action required; re-pull for the updated README.
+- Existing clients can keep parsing the text payload. Schema-aware clients should migrate to `structuredContent` and pin output schema major `1`.
+- Error text is now JSON rather than `Error: <message>`; branch on `errorCode` / `retryable` instead of parsing prose.
 
 ## [1.1.0]
 

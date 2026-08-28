@@ -129,7 +129,7 @@ class JustLendAPI {
         return result;
       });
     } catch (error) {
-      return { error: error.message };
+      throw error;
     }
   }
 
@@ -159,7 +159,7 @@ class JustLendAPI {
     return data.data;
   }
 
-  // List all supported markets with addresses
+  // List the bundled balance/allowance shortcuts with addresses
   getSupportedMarkets() {
     return Object.entries(MARKETS).map(([key, m]) => ({
       symbol: m.symbol,
@@ -251,7 +251,7 @@ class JustLendAPI {
         status: shortfallUSD > 0 ? "AT RISK" : "SAFE"
       };
     } catch (error) {
-      return { error: error.message };
+      throw error;
     }
   }
 
@@ -293,11 +293,15 @@ async function main() {
     }
   } catch (error) {
     console.error("Execution Error:", error.message);
+    process.exitCode = 1;
   }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(err => console.error(err));
+  main().catch(err => {
+    console.error(err);
+    process.exitCode = 1;
+  });
 }
 
 export default JustLendAPI;
