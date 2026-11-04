@@ -2,12 +2,12 @@
   "name": "@justlend/justlend-skills",
   "version": "1.1.1",
   "private": true,
-  "description": "AI Agent skills for JustLend DAO on TRON — structured instructions and MCP tools for V1 pooled lending, V2 isolated lending, staking, energy rental/direct purchase, and governance operations.",
+  "description": "AI Agent skills for JustLend on TRON \u2014 structured instructions and MCP tools for V1 pooled lending, V2 isolated lending, staking, energy rental/direct purchase, and governance operations.",
   "main": "scripts/mcp_server.mjs",
   "type": "module",
   "scripts": {
     "start": "node scripts/mcp_server.mjs",
-    "dev": "npx nodemon scripts/mcp_server.mjs",
+    "dev": "node --watch scripts/mcp_server.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:smoke": "node scripts/verify_market_inventory.mjs"
   },
@@ -41,10 +41,7 @@
   "dependencies": {
     "tronweb": "6.2.2",
     "dotenv": "16.6.1",
-    "@modelcontextprotocol/sdk": "1.27.1"
-  },
-  "devDependencies": {
-    "nodemon": "3.1.14"
+    "@modelcontextprotocol/sdk": "1.32.1"
   },
   "engines": {
     "node": "24.22.1"
@@ -52,15 +49,17 @@
   "overrides": {
     "ws": "8.21.0",
     "ethers": "6.17.0",
-    "axios": "1.18.1",
-    "fast-uri": "3.1.5",
+    "axios": "1.20.0",
+    "fast-uri": "3.1.9",
     "form-data": "4.0.6",
-    "follow-redirects": "1.16.0",
-    "qs": "6.15.2",
-    "ip-address": "10.3.1",
-    "hono": "4.12.34",
-    "@hono/node-server": "2.0.11",
-    "body-parser": "2.3.0",
-    "brace-expansion": "5.0.9"
+    "follow-redirects": "1.16.2",
+    "qs": "6.16.1",
+    "ip-address": "10.7.4",
+    "hono": "4.13.13",
+    "@hono/node-server": "2.1.3",
+    "body-parser": "2.4.0",
+    "brace-expansion": "5.0.12",
+    "proxy-addr": "2.0.8",
+    "zod": "4.6.6"
   }
 }

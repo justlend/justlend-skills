@@ -1,7 +1,7 @@
 ---
 name: justlend-lending-v2
 description: >-
-  Isolated-market lending on JustLend V2 (Moolah, a Morpho-style protocol) on
+  Isolated-market lending on JustLend V2 on
   TRON: supply into ERC4626 vaults, supply-collateral / borrow / repay in
   isolated markets, and liquidate. Use when the user references JustLend V2,
   Moolah, isolated markets, or vaults. Writes require the full MCP server plus a
@@ -10,9 +10,12 @@ description: >-
 
 # JustLend V2 Lending
 
-Isolated-market lending skill for **JustLend V2** on TRON — a Morpho-style protocol that
-separates the supply side (curated **ERC4626 vaults**) from the borrow side (permissionless
-**isolated markets**). Each market is a single `(loanToken, collateralToken, oracle, irm, lltv)`
+Before a write, explicitly load [Shared write safety v1](../SAFETY.md) from this
+checkout. The host/agent owns loading and confirmation; if unavailable, remain read-only.
+
+Isolated-market lending skill for **JustLend V2** on TRON. The protocol
+separates curated **ERC4626 vaults** on the supply side from **isolated markets**
+on the borrow side. Each market is a single `(loanToken, collateralToken, oracle, irm, lltv)`
 pair, so risk is contained per-market rather than pooled like JustLend V1.
 
 > **Naming**: V2's on-chain contracts and MCP tools are named `Moolah` / `moolah_*` (e.g.
@@ -20,10 +23,11 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
 > skill refers to the product as **JustLend V2** throughout and uses the `moolah_*` names only
 > where they match the actual tool/contract surface.
 
-> **Note**: This skill requires the full MCP server v1.1.0+
-> ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)), which added
-> the 30 V2 tools and 4 AI prompts below. The lite bundled server (read-only V1) does not
-> include them.
+> **Note**: This skill requires the full MCP server
+> ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)),
+> with the 30 V2 tools and 4 AI prompts below. Detect them with `tools/list`;
+> do not infer availability from a version string. The bundled V1 server does
+> not include them.
 
 ## V1 vs V2 — when to use which
 
@@ -32,7 +36,7 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
 | Risk model | Shared pool, one health factor across all assets | Per-market, isolated collateral/loan pair |
 | Supply | Supply any market directly | Deposit into a **vault** (ERC4626) that allocates across markets |
 | Borrow | Borrow against pooled collateral | `supplyCollateral` into a market, then `borrow` the loan token |
-| Risk metric | `shortfallUSD` / health factor | `risk` (0–1 ratio of borrow vs max) + market `lltv` |
+| Risk metric | `shortfallUSD` / health factor | `risk` (borrow / max borrowable; can exceed 1) + market `lltv` |
 | Skill | [justlend-lending-v1](../justlend-lending-v1/SKILL.md) | this skill |
 
 ## Core concepts
@@ -43,9 +47,13 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
   identified by a `bytes32` market id. You `supplyCollateral`, then `borrow` up to `lltv` of the
   collateral's oracle value, and `repay` / `withdrawCollateral` to unwind.
 - **LLTV** — Liquidation Loan-To-Value (18-decimal ratio). Borrow position must stay below it.
-- **risk** — 0–1 ratio of current borrow to max borrowable. `risk → 1` means liquidatable. There is
+- **risk** — ratio of current borrow to max borrowable; it can exceed 1. Approaching
+  1 is a warning, not proof of liquidation eligibility. A ratio above 1 indicates
+  debt above the limit; rounded API values at 1 do not settle the exact boundary.
+  Use current on-chain health and a fresh liquidation quote before acting. There is
   **no single account-wide health factor** in V2; risk is per-market.
-- **Liquidation** — a public liquidator can repay an unhealthy position's debt and seize collateral.
+- **Liquidation** — an authorized liquidation route can repay an unhealthy position's debt
+  and seize collateral. An unhealthy position alone does not establish permission to use that route.
 
 ## Tools (Full MCP Server v1.1.0)
 
@@ -74,7 +82,7 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
 ### Liquidation
 | Tool | Description | Write? |
 |------|-------------|--------|
-| `get_moolah_pending_liquidations` | Positions currently liquidatable | No |
+| `get_moolah_pending_liquidations` | Liquidation candidates, potentially including near-threshold positions; verify current on-chain health | No |
 | `get_moolah_liquidation_quote` | Seize/repay quote for liquidating a position | No |
 | `get_moolah_liquidation_records` | Historical V2 liquidations | No |
 | `approve_liquidator_token` | Approve the repay token for the public liquidator | **Yes** |
@@ -96,7 +104,7 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
 | `get_moolah_vault_mining_apy` | Single vault's V2 mining APY (USDD/TRX split + total) | No |
 | `get_moolah_mining_resolver` | All mining-enabled vaults → their USDD/TRX APY split | No |
 | `get_moolah_mining_accruing` | A user's accruing + settling mining rewards across vaults | No |
-| `get_moolah_pending_mining_periods` | A user's claimable (settled, merkle-published) airdrop rounds | No |
+| `get_moolah_pending_mining_periods` | Backend-reported mining rounds; verify published root and on-chain status before claiming | No |
 | `claim_moolah_mining_period` | Claim a single settled mining airdrop round via `multiClaim()` | **Yes** |
 
 > AI prompts (full MCP server): `moolah_supply`, `moolah_borrow`, `moolah_liquidate`,
@@ -107,12 +115,30 @@ pair, so risk is contained per-market rather than pooled like JustLend V1.
 ### Risk is per-market, not account-wide
 Unlike V1's single health factor, V2 risk lives in each market. Always call
 `get_moolah_user_position` (or `get_moolah_history` for the full picture) and inspect the
-`risk` ratio (0–1) **and** the market `lltv` before advising. `risk` near 1 ⇒ liquidatable.
+`risk` ratio **and** the market `lltv` before advising. Near 1 means little safety
+margin, not automatic eligibility. The contract's current `isHealthy` result is
+authoritative; obtain a fresh `get_moolah_liquidation_quote` for cost estimation.
+The quote takes no borrower address and does not check borrower health; a successful
+quote is not proof of eligibility. Do not decide from rounded/stale API values alone.
+
+### Health and liquidation permissions are separate
+
+Check the deployed network and implementation's core caller permission
+(`isLiquidationWhitelist`) and the public-liquidator market/borrower gates
+(`marketWhitelist`, `marketUserWhitelist`) for the exact market and borrower.
+Allowlisting the liquidator in the core contract does not by itself prove that
+the liquidator's own gate is satisfied. A quote does not prove liquidation permission.
+If permissions are unknown, stop and request read-only verification; do not
+substitute caller addresses for the borrower or broaden a whitelist to make the call pass.
 
 ### Approve before write
-Vault deposits need `approve_moolah_vault`; market collateral/borrow/repay need
-`approve_moolah_proxy`; liquidation needs `approve_liquidator_token`. The full server returns a
-structured `errorCode: INSUFFICIENT_ALLOWANCE` with a `hint` if you skip this — approve, then retry.
+TRC20 vault deposits need `approve_moolah_vault`; market collateral supply and
+TRC20 repayment need `approve_moolah_proxy`; liquidation needs
+`approve_liquidator_token`. Borrowing and collateral withdrawal do not themselves
+need a new token allowance. The full server returns a
+structured `errorCode: insufficient_allowance` with a `hint` when allowance is missing.
+Confirm the necessary approval separately, recheck it, then confirm the intended write;
+the error is not permission to retry automatically.
 
 ### Vaults are the supply side, markets are the borrow side
 To *earn*, use a **vault** (`moolah_vault_deposit`). To *borrow*, use a **market**
@@ -132,9 +158,11 @@ To *earn*, use a **vault** (`moolah_vault_deposit`). To *borrow*, use a **market
 4. `moolah_repay` → `moolah_withdraw_collateral` to unwind
 
 ### Liquidate an unhealthy position
-1. `get_moolah_pending_liquidations` — find liquidatable positions
-2. `get_moolah_liquidation_quote` — check seize vs repay economics
-3. `approve_liquidator_token` → `moolah_liquidate`
+1. `get_moolah_pending_liquidations` — find candidates; inclusion is not proof of eligibility.
+2. Verify the target borrower's current on-chain health. If it is healthy or unknown, stop.
+3. Verify the exact route's core caller and public-liquidator market/borrower permissions. If denied or unknown, stop; do not change permissions as a workaround.
+4. `get_moolah_liquidation_quote` — check seize vs repay economics; this is not a borrower-health or permission check.
+5. Separately confirm `approve_liquidator_token`, recheck allowance, then separately confirm `moolah_liquidate`. Verify the receipt and post-state.
 
 ## Examples
 
@@ -144,3 +172,25 @@ To *earn*, use a **vault** (`moolah_vault_deposit`). To *borrow*, use a **market
 - "Check my JustLend V2 positions — is any market close to liquidation?"
 - "Show me the pending liquidations on JustLend V2 and the quote to liquidate the riskiest one."
 - "How much energy will a V2 supply-collateral-and-borrow cost?"
+
+## Mining rewards: state and recovery
+
+Keep accruing, settling and settled rewards separate. A backend payload is not
+on-chain claimability. On mainnet, use `get_moolah_mining_accruing` for current
+accrual and `get_moolah_pending_mining_periods` for backend-reported periods.
+Before `claim_moolah_mining_period`, bind the explicit owner, period, token/amount
+and configured distributor; require a published root, valid proof and a known
+unclaimed on-chain index. Missing root, mismatched proof, unavailable state or an
+already-claimed index must stop signing, not become a zero/default proof.
+Confirm that exact claim separately and verify its receipt and claimed state.
+On timeout inspect the original receipt and index before considering another call.
+
+For CLI users, `mining claim-info` and its deprecated `mining claim` alias only
+inspect payload status; neither signs or proves claimability. Do not treat the
+legacy command name as a transaction. SUN pool registry membership likewise does
+not prove a currently active V1 or V2 reward campaign.
+
+The V2 Utils SDK's optional `getLiquidationPermissionDiagnostics` is a JavaScript
+helper, **not an MCP tool**. It reports independent flags and unknown reads, not
+`canLiquidate: true`; deployed gate semantics, health and quote still need
+separate verification. Never substitute it for execution consent.

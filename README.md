@@ -3,19 +3,19 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![TRON Network](https://img.shields.io/badge/Network-TRON-red)
 ![MCP](https://img.shields.io/badge/MCP-Compatible-blue)
-![JustLend](https://img.shields.io/badge/Protocol-JustLend_DAO-green)
+![JustLend](https://img.shields.io/badge/Protocol-JustLend-green)
 
-AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Provides structured instructions and an MCP server that enables AI agents (Claude Code, Claude Desktop, Cursor, Codex, etc.) to query market data, check account positions, and analyze DeFi lending data.
+AI Agent skills for [JustLend](https://justlend.org) on the TRON network. Provides structured instructions and an MCP server that enables AI agents (Claude Code, Claude Desktop, Cursor, Codex, etc.) to query market data, check account positions, and analyze DeFi lending data.
 
 > **Distribution:** install this project from [GitHub](https://github.com/justlend/justlend-skills); it is not published to the npm registry. The scoped name in `package.json` identifies the project for local tooling only. Do not run `npm install @justlend/justlend-skills`—clone the repository and run `bash install.sh` as described below. The `npm install` command used inside the clone installs this project's dependencies.
 
-**Current version:** `1.1.1` · bundled MCP output contract: `1.0.0`
+**Package metadata version:** `1.1.1` · bundled MCP output contract: `1.0.0`
 
 ## Features
 
 - **Market Data**: Real-time APY (including mining rewards), TVL, and utilization for all JustLend markets
 - **Protocol Dashboard**: Total supply, borrow, TVL, user count across the protocol
-- **Account Analysis**: Health factor monitoring, liquidation risk assessment, balance queries
+- **Account Analysis**: Comptroller liquidity/shortfall, current liquidation-risk status, balance queries
 - **Token Allowances**: Check TRC20 approval status for JustLend contracts
 - **Energy Direct Purchase Workflow**: Quote, explicitly confirm, submit, track, and recover backend-broadcast energy payments through the full MCP server
 
@@ -37,7 +37,7 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 | **Skills (this repository)** | Agent instruction files (`SKILL.md`) + a bundled read-only MCP server (9 tools) | An agent needs guided read or write workflows; writes route to the full MCP server | Via full MCP only |
 | **Bundled MCP server** (`npm start`) | The 9-tool read-only stdio server shipped here | Same, wired into a client (Claude / Cursor / Codex / OpenCode) | No |
 | **CLI** (`node scripts/justlend_api.mjs`) | One-shot terminal queries | Quick manual checks / scripting reads | No |
-| **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | 104-tool read + **write** server | You need to *act*: supply/borrow/repay/withdraw, stake, rent or buy energy, vote, liquidate | **Yes** (signing wallet required) |
+| **Full MCP server** ([@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend)) | Full read + **write** server (capability-detect at runtime) | You need to *act*: supply/borrow/repay/withdraw, stake, rent or buy energy, vote, liquidate | **Yes** (signing wallet required) |
 
 ### Skill → dependency matrix
 
@@ -50,8 +50,9 @@ AI Agent skills for [JustLend DAO](https://justlend.org) on the TRON network. Pr
 | `justlend-energy-rental` | — | ✅ | ✅ | ✅ | Yes |
 | `justlend-energy-purchase` | — | ✅ | ✅ | ✅ | Yes |
 | `justlend-governance-v1` | — | ✅ | ✅ | ✅ | Yes |
+| `justlend-risk-alerts` | — | ✅ | — | — | No |
 
-Read-only skills work with just this repository + a TronGrid key. Every write skill routes through the full server and needs a **signing wallet** (agent-wallet or a browser wallet); the bundled server has no signing capability.
+Bundled V1 queries work with just this repository + a TronGrid key. Risk-alert reads instead require the full server and an operator-configured `JUSTLEND_ALERT_API_URL`; no wallet is needed. Every write skill routes through the full server and needs a **signing wallet** (agent-wallet or a browser wallet); the bundled server has no signing capability.
 
 **Graceful degradation.** If the full MCP server or a signing wallet is absent, the read-only skills still work unchanged — the agent can quote rates, read a position, and check allowances, then tell the user exactly what to install (the full server) and connect (a wallet) to act. A write skill invoked without the full server should **stop and report the missing dependency**, never silently no-op or fake a result.
 
@@ -91,7 +92,8 @@ justlend-skills/
 │   ├── justlend-trx-staking/SKILL.md
 │   ├── justlend-energy-rental/SKILL.md
 │   ├── justlend-energy-purchase/SKILL.md
-│   └── justlend-governance-v1/SKILL.md
+│   ├── justlend-governance-v1/SKILL.md
+│   └── justlend-risk-alerts/SKILL.md
 ├── docs/                             # Protocol guides
 │   ├── justlend-guide.md            # Lending concepts & risk management
 │   ├── justlend-v2-guide.md         # V2 isolated-market concepts
@@ -106,6 +108,8 @@ justlend-skills/
 ## Quick Start
 
 Recommended development baseline: **Node.js 24.22.1**, pinned in `.nvmrc`.
+
+PRs targeting `master` and branch pushes run clean installation, production and full dependency audits, offline tests, and script/installer syntax checks. Push checks also validate fork branches before this workflow is present on upstream `master`. Run `npm ci`, `npm audit --omit=dev`, `npm audit --audit-level=high`, and `npm test` locally before submitting changes.
 Use `nvm install && nvm use` to select the recommended version.
 
 ### 1. Install from GitHub
@@ -132,9 +136,18 @@ Edit `.env`:
 # Required — get from https://www.trongrid.io/
 TRONGRID_API_KEY=your_trongrid_api_key
 
-# Network: mainnet (default) or nile (testnet)
+# Mainnet-only bundled queries; non-mainnet NETWORK values are rejected.
 NETWORK=mainnet
 ```
+
+The bundled MCP server and CLI are **mainnet-only**: RPC, contracts and APIs
+use mainnet. An unset or blank `NETWORK` selects `mainnet`; any other network
+(including `nile`) is rejected at startup. For testnets, use the full MCP
+server's supported network configuration and verify its RPC/contracts/API
+selection separately. This package's `.env` cannot switch the full server.
+
+For development, `npm run dev` uses the required Node runtime's native
+`--watch` mode to restart when imported source files change; no nodemon is needed.
 
 ### 3. Run
 
@@ -224,7 +237,10 @@ Add to `.cursor/mcp.json`:
 
 ### Claude Code
 
-Add to `.claude/settings.local.json`:
+Add the server to the project-root `.mcp.json` (see the
+[official scope reference](https://code.claude.com/docs/en/mcp#project-scope)).
+Export `TRONGRID_API_KEY` in the environment that launches Claude Code; do not
+commit the real key with a shared project configuration:
 
 ```json
 {
@@ -233,7 +249,7 @@ Add to `.claude/settings.local.json`:
       "command": "node",
       "args": ["/ABSOLUTE_PATH_TO/justlend-skills/scripts/mcp_server.mjs"],
       "env": {
-        "TRONGRID_API_KEY": "your_key"
+        "TRONGRID_API_KEY": "${TRONGRID_API_KEY}"
       }
     }
   }
@@ -260,17 +276,31 @@ OpenCode loads the bundled `.opencode/` plugin, which auto-discovers each skill 
 
 ## Available MCP Tools
 
-| Tool | Description |
-|------|-------------|
-| `get_all_markets` | All markets with supply/borrow APY, mining rewards, and TVL |
-| `get_dashboard` | Protocol overview: total supply, borrow, TVL, user count |
-| `get_supported_markets` | List the 8 bundled static balance/allowance shortcuts |
-| `get_jtoken_details` | Detailed jToken info: interest rate model, reserves, mining rewards |
-| `get_account_summary` | Health factor, liquidity, liquidation risk |
-| `get_account_data_from_api` | Comprehensive account data from API (positions, rewards) |
-| `get_trx_balance` | Native TRX balance |
-| `get_token_balance` | TRC20 token balance (USDT, USDD, etc.) |
-| `check_allowance` | Check TRC20 approval status for JustLend contracts |
+These are the bundled server's actual results, not the full server's payloads:
+
+| Tool | Result fields / shape |
+|------|-----------------------|
+| `get_all_markets` | Array: `symbol`, `jToken`, `supplyAPY`, `totalSupplyAPY`, `borrowAPY`, `tvlUSD`; optional `miningAPY`, `miningRewardPerDay`, `stakingAPY` |
+| `get_dashboard` | Upstream dashboard `data`, passed through without a locally fixed nested schema |
+| `get_supported_markets` | Static shortcut array: `symbol`, `jToken`, `underlying`, `decimals`, `isNative` |
+| `get_jtoken_details` | Upstream jToken detail `data`, passed through |
+| `get_account_summary` | `address`, `liquidityUSD`, `shortfallUSD`, `isLiquidatable`, `status` |
+| `get_account_data_from_api` | Upstream account `data`, passed through; not the summary tool's result |
+| `get_trx_balance` | `address`, `balance` (a human-readable TRX string, including the unit) |
+| `get_token_balance` | Recognized TRC20: `address`, `token`, `balance` (token-unit string); TRX: the native-balance shape above. Unknown symbols fail with `invalid_input` |
+| `check_allowance` | TRC20: `asset`, `spender`, `allowance`, `needsApproval`; native TRX: `asset`, `allowance: "Infinity"`, `needsApproval: false`, `note` |
+
+The summary does not compute `healthFactor`, `totalSupplyUSD`, `totalBorrowUSD`
+or `positions[]`. Market mapping does not return `tvl`, `totalSupply` or `totalBorrow`.
+Market APYs are formatted percentage strings and `tvlUSD` is a formatted USD
+string, not an unformatted numeric total. No wrapper adds these missing fields.
+
+Account USD values are two-decimal display strings. Use `isLiquidatable` and
+`status`, not a reparsed/rounded `shortfallUSD`, to read the current shortfall
+signal. A successful `SAFE` means no current Comptroller shortfall, not a
+guarantee about future prices or a proposed borrow. Nonzero contract error
+codes and malformed ABI results fail the query; treat account risk as unknown
+until a successful query, never synthesize `SAFE` from an error.
 
 Each read tool declares both `inputSchema` and `outputSchema`. Successful calls retain the legacy raw JSON text and add this MCP `structuredContent` envelope:
 
@@ -284,17 +314,35 @@ Each read tool declares both `inputSchema` and `outputSchema`. Successful calls 
 
 Failures are flagged `isError` and return the same JSON in text and `structuredContent`: `{ schemaVersion, tool, error, errorCode, retryable, hint }`. Stable codes are `invalid_input`, `authentication`, `rate_limit`, `transient`, and `internal`. Only `rate_limit` and `transient` are safe to retry automatically, using backoff. Consumers should pin the schema major and prefer `structuredContent`; the full server uses the same `schemaVersion` / `tool` / `result` success fields.
 
+The version above covers the bundled server's envelope and stable error codes,
+not every nested upstream API field. The full server's failures may instead be
+JSON text with `isError: true`; do not assume they share this bundled error
+envelope. Unknown codes or absent retryability stop the write workflow. Validate
+critical business fields against the connected full tool's schema; an unavailable
+value is not zero. Pin the package/source revision when consuming payload details.
+
+### Shared safety loading
+
+Every write module explicitly links [Shared write safety v1](skills/SAFETY.md).
+The host/agent must load that file when selecting a write module; README/root
+skill discovery does **not** automatically inject it. Keep the complete `skills/`
+tree when installing or symlinking, including `SAFETY.md`. If it is inaccessible,
+remain read-only and report the missing resource. The rules identify confirmation,
+refusal/re-confirmation, prechecks, unknown errors and unresolved-write recovery
+responsibilities. Their revision is separate from package/deployment versions.
+
 ## Skill Inputs, Outputs & Failure Handling
 
 | Skill | Reads with | Writes with (full server) | Returns | On failure |
 |-------|-----------|---------------------------|---------|-----------|
 | `justlend-dao` (base) | the 9 read tools above | — | market / account JSON | retryable read errors (rate-limit, timeout) are safe to retry with backoff |
 | `justlend-lending-v1` | `get_account_summary`, `check_allowance` | `approve_underlying` → `supply` / `borrow` / `repay` / `withdraw` | tx hash + post-state | **never auto-retry a write** — a repay/borrow may have landed; re-query `get_account_summary` first |
-| `justlend-lending-v2` | market / vault reads | `approve_vault` → `supply_collateral` / `borrow` / `withdraw_collateral` / `liquidate` | tx hash + position | same no-retry rule; `liquidate` is irreversible — confirm target and amount |
-| `justlend-trx-staking` | balance reads | `stake_trx_to_strx` / `unstake_strx` | tx hash | `unstake_strx` starts an **unbonding period** — not instant |
+| `justlend-lending-v2` | market / vault reads | `approve_moolah_vault` / `approve_moolah_proxy` → `moolah_vault_deposit` / `moolah_supply_collateral` / `moolah_borrow` / `moolah_withdraw_collateral` / `moolah_liquidate` | tx hash + position | same no-retry rule; liquidation is irreversible — confirm target and amount |
+| `justlend-trx-staking` | balance / eligibility reads | `stake_trx_to_strx` / `unstake_strx` / `claim_strx_rewards` | tx hash + post-state | `unstake_strx` starts an **unbonding period**; use `claim_strx_rewards` to collect available TRX afterward |
 | `justlend-energy-rental` | market reads | rental tools | tx hash + order | quote first; price can move between quote and order |
 | `justlend-energy-purchase` | config / quote / order / public history / payment risk | `buy_energy_direct` | payment tx + order state | confirm exact quote; backend broadcasts; ambiguous results block a second payment |
 | `justlend-governance-v1` | `get_proposal_list`, `get_vote_info` | `approve_jst_for_voting` → `deposit_jst_for_votes` → `cast_vote` → `withdraw_votes_*` | tx hash + vote state | `deposit_jst_for_votes` locks JST as WJST until withdrawal |
+| `justlend-risk-alerts` | explicit-address list / default rules / V2 markets | — | public observations; no email address | errors and nulls stay unknown; no signing workaround |
 
 **Write failure contract:** the host must confirm each write with the user (HITL), preview first, and on any error **re-query state before retrying**. Mutating contract calls are not idempotent. Energy direct purchase is the narrow exception: its service may retry only the **same signed transaction** internally; it must never create a second payment silently.
 
@@ -307,8 +355,8 @@ Real closed loops — user utterance → skill/tool routing → output → next 
 **User:** *"Is it worth borrowing USDT on JustLend right now, and can my account take it?"*
 1. Agent loads **`justlend-dao`** — this is a read question, no write skill needed.
 2. `get_all_markets` → USDT borrow APY and mining offset.
-3. `get_account_summary` → current health factor and borrow limit.
-4. **Output:** "USDT borrow APY is X% (Y% after mining). Your health factor is 2.1; borrowing $500 drops it to ~1.6 — still safe. To actually borrow you'll need the full server plus a wallet."
+3. `get_account_summary` → current liquidity, shortfall and query success.
+4. **Output:** "USDT borrow APY is X% (Y% after mining). The current Comptroller query reports no shortfall. This summary does not calculate a health factor or establish a safe size for a new borrow. To evaluate and submit a borrow, use the full server with a wallet and separately confirm the action."
 
 No funds move — the agent stops at advice because this project is read-only.
 
@@ -334,6 +382,7 @@ No funds move — the agent stops at advice because this project is read-only.
 - **Health factor would breach** → agent refuses or warns before a borrow/withdraw that pushes `shortfallUSD > 0`.
 - **Rate limit (TronGrid 429)** → reads are safe to retry after a short backoff (the full server marks these `errorCode: "transient"`, `retryable: true`). Writes are **not** retried automatically.
 - **Full server not installed** → a write skill reports the missing dependency and points to [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend); it does not fake a transaction.
+- **sTRX claim availability unknown** → preserve `null`, provenance and degradation notes; re-query `get_strx_account` / `check_strx_withdrawal_eligibility`. Do not report a zero claim or submit a claim from unknown data.
 
 ## Safety & Boundaries
 
@@ -342,7 +391,7 @@ No funds move — the agent stops at advice because this project is read-only.
 - **Write operations live in the full server.** supply/borrow/repay/withdraw, sTRX staking, energy rental/direct purchase, and governance voting run through [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend), which requires a **signing wallet**. When you enable those, the host MUST:
   - **confirm every write with the user (HITL)** before signing — show amount, market, and direction;
   - **never auto-retry a mutating call** (a repay / borrow / liquidate / vote may already have landed) — re-query state first;
-  - simulate / preview first, and prefer **Nile testnet** (`NETWORK=nile`) before mainnet.
+  - simulate / preview first; for a Nile test, configure and verify the **full server's** supported network explicitly. The bundled server is mainnet-only and rejects `NETWORK=nile`.
 - **Per-module risk (highest-consequence, irreversible):** `liquidate` (V2), `unstake` (sTRX — has an unbonding period), and `cast_vote` (locks JST as WJST until withdrawal). Treat these as destructive.
 
 ### Per-skill risk profile
@@ -356,6 +405,7 @@ No funds move — the agent stops at advice because this project is read-only.
 | `justlend-energy-rental` | write, **spends TRX** | no (consumed) | rental fee | yes |
 | `justlend-energy-purchase` | write, **signs TRX payment** | no after backend broadcast | quoted payment + possible activation fee | yes, exact quote |
 | `justlend-governance-v1` | write | vote reclaimable after proposal ends | **JST locked as WJST** | yes |
+| `justlend-risk-alerts` | read-only | n/a | no signing or transaction fee | no |
 
 ### If an agent misfires (recovery)
 
@@ -363,7 +413,8 @@ No funds move — the agent stops at advice because this project is read-only.
 - **A write may have half-landed** (client crash, timeout) → do **not** re-send. Re-query `get_account_summary` (or `get_vote_info` / balances) for the real state, then decide.
 - **Direct-purchase result unknown** → call `get_energy_purchase_history`, then call `get_energy_payment_risk` with no arguments. The configured-wallet risk check is read-only and never replays a payment. Never sign a second payment while the first is unresolved; any exact-request replay occurs only inside a separately confirmed `buy_energy_direct` call.
 - **Accidental approval** → revoke by setting the allowance back to 0 (`amount='0'` on the approve tool — the same `approve(0)` the write flow uses).
-- **Stuck in unbonding / locked votes** → these are protocol timelocks, not errors; wait out the period, then `unstake_strx` / `withdraw_votes_*`.
+- **Stuck in sTRX unbonding** → wait, then query `check_strx_withdrawal_eligibility` and `get_strx_account`. If a positive amount is known, separately confirm `claim_strx_rewards`; verify its receipt and refreshed balance/claimable amount. Do not call `unstake_strx` again to collect an existing round.
+- **Locked votes** → query proposal/vote status after the timelock, then separately confirm `withdraw_votes_from_proposal` and, if requested, `withdraw_votes_to_jst`; verify the resulting vote/token balances.
 
 ## Data & Privacy
 
@@ -378,12 +429,38 @@ No funds move — the agent stops at advice because this project is read-only.
 | **Wrong** skill fires (read when you meant write, or V1 vs V2) | overlapping triggers | the frontmatter carries negative triggers — state the operation explicitly ("supply", "borrow on V2") |
 | `401` / `403` on reads | missing or invalid `TRONGRID_API_KEY` | set a valid key in `.env`; verify with `node scripts/justlend_api.mjs markets` |
 | `429` / slow reads | TronGrid rate limit | back off and retry; upgrade the TronGrid plan for higher throughput |
-| Empty market/account data | key works but network mismatch | check `NETWORK` (`mainnet` vs `nile`) matches the address you're querying |
+| Non-mainnet configuration rejected | `NETWORK` requests an unsupported network | use `NETWORK=mainnet` for this bundled server; use a separately configured full server for testnets |
 | A write skill "does nothing" | full MCP server or signing wallet not installed | install [@justlend/mcp-server-justlend](https://github.com/justlend/mcp-server-justlend) and connect a wallet — the bundled server never signs |
 | MCP server won't start | Node version differs from the recommended 24.22.1, or deps not installed | `nvm install && nvm use`; check `node -v`; run `npm install` |
 | Behaviour changed after update | version / manifest drift | compare installed version with [`CHANGELOG.md`](CHANGELOG.md); re-run `npm install` and restart |
 
 **Logs & version.** The server emits lifecycle/fatal logs to stderr and returns tool failures through the structured error contract above; the CLI prints errors to stderr. Run the CLI command directly to diagnose the offending address/token. Include the project version from `package.json` / `skills/_meta.json` and output `schemaVersion` when filing an issue.
+
+
+## Capability snapshot and release boundaries
+
+The [full-server snapshot](tests/fixtures/full-mcp-capabilities.json) is a **source snapshot, not a published release**.
+It records 107 tools from the exact MCP commit in `sourceCommit`, including three
+read-only risk-alert tools. The bundled server still has **nine V1 read tools**.
+Use the connected server's `tools/list` and schemas before following any module;
+a matching version string alone is insufficient. Offline tests cross-check skill
+tool tables and alert inputs/read annotations, not live-wallet execution.
+
+Maintainers can regenerate the fixture from a clean, committed and built MCP
+checkout with `node scripts/snapshot-full-mcp.mjs /absolute/path/to/mcp-server-justlend`.
+Review the resulting diff before committing it. The fixture does not require
+credentials and the script makes no API requests or signing calls.
+
+The historical `latest`/`history` timestamps in `skills/_meta.json` are retained
+for compatibility and explicitly marked unverified in `development`; these
+changes do not bump a version, set a future publication date, or publish npm.
+Only a separately completed release may establish new release metadata.
+
+Risk-alert usage is in [the read-only module](skills/justlend-risk-alerts/SKILL.md).
+Writes and email operations are deferred until the backend confirms headless
+session identity. Staking delay/claim rules, energy same-payment recovery, and
+V2 health/permission/quote separation remain mandatory; they are not bypassed by
+the presence of a new read capability.
 
 ## License
 

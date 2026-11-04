@@ -1,8 +1,8 @@
 ---
 name: justlend-dao
 description: >-
-  Read-only query surface for JustLend DAO lending on TRON — real-time market
-  data (APY/TVL/rates), account positions and health factor, jToken details,
+  Read-only query surface for JustLend lending on TRON — real-time market
+  data (APY/TVL/rates), account liquidity and shortfall, jToken details,
   TRC20 balances, and allowances, via the bundled 9-tool MCP server. Use when
   the user asks about JustLend markets, their lending position/health, or TRON
   lending data. For write actions (supply/borrow/repay/withdraw, stake, vote,
@@ -10,9 +10,13 @@ description: >-
   @justlend/mcp-server-justlend. Not for non-TRON chains or non-JustLend protocols.
 ---
 
-# JustLend DAO — AI Agent Skill
+# JustLend — AI Agent Skill
 
-This skill enables AI agents to interact with the [JustLend DAO](https://justlend.org) lending protocol on the TRON blockchain. Query real-time market data, check account positions, and analyze lending data via MCP tools.
+This skill enables AI agents to interact with the [JustLend](https://justlend.org) lending protocol on the TRON blockchain. Query real-time market data, check account positions, and analyze lending data via MCP tools.
+
+The bundled MCP server and CLI are **mainnet-only**. `NETWORK` defaults to
+`mainnet`; non-mainnet values are rejected, not silently redirected. Use the
+full MCP server's supported network configuration for testnet workflows.
 
 ## Prerequisites
 
@@ -24,7 +28,7 @@ This skill enables AI agents to interact with the [JustLend DAO](https://justlen
 | Tool | Inputs | Description |
 |------|--------|-------------|
 | `get_all_markets` | — | All JustLend markets with supply/borrow APY, mining APY, and TVL |
-| `get_account_summary` | `address` | Health factor, liquidity, and liquidation risk |
+| `get_account_summary` | `address` | `liquidityUSD`, `shortfallUSD`, `isLiquidatable`, `status` |
 | `get_trx_balance` | `address` | Native TRX balance |
 | `get_token_balance` | `address`, `token` | TRC20 token balance (e.g., USDT, USDD) |
 | `get_dashboard` | — | Protocol overview: total supply, total borrow, TVL, user count |
@@ -35,8 +39,13 @@ This skill enables AI agents to interact with the [JustLend DAO](https://justlen
 
 ## Critical Rules
 
-### Health Factor Check
-Always call `get_account_summary` before advising a user about their position. If `shortfallUSD > 0`, the position is **at liquidation risk**.
+### Account Liquidity Check
+Always call `get_account_summary` before advising a user about their position.
+It does not compute `healthFactor`, supply/borrow totals or positions. Use
+`status` and `isLiquidatable` for the contract's current shortfall signal;
+the two-decimal USD display can round a small positive shortfall to `0.00`.
+A failed query leaves risk unknown, never SAFE. A successful `SAFE` result
+only means no current Comptroller shortfall, not a guarantee about a new borrow.
 
 ## Typical Workflows
 
@@ -45,7 +54,7 @@ Always call `get_account_summary` before advising a user about their position. I
 2. Compare `totalSupplyAPY` (includes mining rewards) across markets
 
 ### Analyze Account Position
-1. `get_account_summary` — check health factor and liquidity
+1. `get_account_summary` — check current liquidity, shortfall and query success
 2. `get_account_data_from_api` — get detailed position data
 3. `get_token_balance` — check specific token balances
 
@@ -87,3 +96,5 @@ Prefer `structuredContent`: successes return `{ schemaVersion: "1.0.0", tool, re
 - This is a **read-only** skill — no transaction signing or write operations
 - Only requires a TronGrid API key for blockchain read access
 - Direct energy purchase uses `justlend-energy-purchase` with the full MCP server; it is not provided by this bundled read-only MCP.
+
+Risk-alert queries use [justlend-risk-alerts](skills/justlend-risk-alerts/SKILL.md) and the full server, not these nine bundled tools. Require runtime capability detection and an explicit trusted endpoint; no signing or email changes are supported.
